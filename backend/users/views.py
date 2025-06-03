@@ -1,14 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework_simplejwt.exceptions import TokenError
 
 from utils.response import api_response
-from .serializers import SignupSerializer
+from .serializers import SignupSerializer, UserSerializer
 
 
-class SignupView(APIView):
+class SignupAPIView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -29,7 +28,7 @@ class SignupView(APIView):
         )
 
 
-class LoginView(TokenObtainPairView):
+class LoginAPIView(TokenObtainPairView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -51,7 +50,7 @@ class LoginView(TokenObtainPairView):
         )
 
 
-class CustomTokenRefreshView(TokenRefreshView):
+class TokenRefreshAPIView(TokenRefreshView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -70,4 +69,16 @@ class CustomTokenRefreshView(TokenRefreshView):
             message="Token refreshed successfully",
             data=serializer.validated_data,
             status_code=status.HTTP_200_OK,
+        )
+
+
+class MeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return api_response(
+            success=True,
+            message="User fetched successfully",
+            data=serializer.data,
         )

@@ -1,9 +1,12 @@
 import { Search, Menu, User, Heart, Globe, Map } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useUser, useLogout } from '@/hooks/auth/useAuth';
 
 const Header = () => {
+    const { data: user, isLoading } = useUser();
+    const logout = useLogout();
+
     return (
         <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,19 +69,35 @@ const Header = () => {
                             </Button>
                         </Link>
                         <div className="flex items-center space-x-2">
-                            <Link to="/login">
-                                <Button variant="ghost" className="text-sm font-medium">
-                                    Log in
-                                </Button>
-                            </Link>
-                            <Link to="/signup">
-                                <Button className="bg-rose-500 hover:bg-rose-600 text-sm">Sign up</Button>
-                            </Link>
-                            <Link to="/dashboard">
-                                <Button variant="ghost" size="sm" className="rounded-full">
-                                    <User className="h-4 w-4" />
-                                </Button>
-                            </Link>
+                            {!isLoading && (
+                                <>
+                                    {user ? (
+                                        <>
+                                            <Link to="/dashboard">
+                                                <Button variant="ghost" size="sm" className="rounded-full">
+                                                    <User className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                            <Button variant="ghost" className="text-sm font-medium" onClick={logout}>
+                                                Log out
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Link to="/login">
+                                                <Button variant="ghost" className="text-sm font-medium">
+                                                    Log in
+                                                </Button>
+                                            </Link>
+                                            <Link to="/signup">
+                                                <Button className="bg-rose-500 hover:bg-rose-600 text-sm">
+                                                    Sign up
+                                                </Button>
+                                            </Link>
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
