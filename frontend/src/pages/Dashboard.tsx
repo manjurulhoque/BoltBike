@@ -16,10 +16,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLogout, useUser } from '@/hooks/auth/useAuth';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
+    const { data: user, isLoading } = useUser();
     const [activeTab, setActiveTab] = useState('bookings');
+    const logout = useLogout();
+    const navigate = useNavigate();
+    const { first_name, last_name, email, phone } = user || {};
 
     const bookings = [
         {
@@ -88,7 +93,11 @@ const Dashboard = () => {
             <div className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <h1 className="text-2xl font-bold text-rose-500">eBikeRent</h1>
+                        <h1 className="text-2xl font-bold text-rose-500">
+                            <Link to="/" className="text-2xl font-bold text-rose-500">
+                                eBikeRent
+                            </Link>
+                        </h1>
                         <div className="flex items-center space-x-4">
                             <Button variant="outline">
                                 <Plus className="h-4 w-4 mr-2" />
@@ -111,8 +120,10 @@ const Dashboard = () => {
                                 <div className="w-20 h-20 bg-rose-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                                     <User className="h-10 w-10 text-white" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900">John Doe</h3>
-                                <p className="text-gray-600">john.doe@example.com</p>
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {first_name} {last_name}
+                                </h3>
+                                <p className="text-gray-600">{email}</p>
                             </div>
 
                             <nav className="space-y-2">

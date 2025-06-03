@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { LoginCredentials, SignupCredentials, AuthResponse, User } from '@/lib/types/auth';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1/users';
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
@@ -72,15 +72,16 @@ export const useUser = () => {
     return useQuery({
         queryKey: ['user'],
         queryFn: async () => {
-            const response = await fetch(`${API_URL}/users/me/`, {
+            const response = await fetch(`${API_URL}/me/`, {
                 headers: getAuthHeaders(),
             });
 
             if (!response.ok) {
                 throw new Error('Failed to fetch user');
             }
+            const data = await response.json();
 
-            return response.json() as Promise<User>;
+            return data.data as User;
         },
         enabled: !!localStorage.getItem('token'),
     });

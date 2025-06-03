@@ -62,14 +62,16 @@ const Header = () => {
                                 Rent your e-bike
                             </Button>
                         </Link>
-                        <Link to="/map">
+                        {/* <Link to="/map">
                             <Button variant="ghost" className="hidden md:block text-sm font-medium">
                                 <Map className="h-4 w-4 mr-1" />
                                 Map View
                             </Button>
-                        </Link>
+                        </Link> */}
                         <div className="flex items-center space-x-2">
-                            {!isLoading && (
+                            {isLoading ? (
+                                <div className="w-8 h-8 rounded-full border-2 border-gray-300 border-t-transparent animate-spin"></div>
+                            ) : (
                                 <>
                                     {user ? (
                                         <>
