@@ -34,8 +34,8 @@ export const useLogin = () => {
             return response.json() as Promise<AuthResponse>;
         },
         onSuccess: (data) => {
-            localStorage.setItem('token', data.access);
-            localStorage.setItem('refreshToken', data.refresh);
+            localStorage.setItem('token', data.data.access);
+            localStorage.setItem('refreshToken', data.data.refresh);
             queryClient.invalidateQueries({ queryKey: ['user'] });
             navigate('/');
         },

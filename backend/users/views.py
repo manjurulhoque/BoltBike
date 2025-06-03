@@ -35,9 +35,7 @@ class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except Exception as e:
+        if not serializer.is_valid():
             return api_response(
                 success=False,
                 message="Login failed",
