@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.core.validators import FileExtensionValidator
+
 from .models import Bike, BikeImage, MaintenanceTicket
 from users.serializers import UserSerializer
 
@@ -38,7 +40,20 @@ class BikeSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True)
     images = BikeImageSerializer(many=True, read_only=True)
     image_files = serializers.ListField(
-        child=serializers.ImageField(),
+        child=serializers.ImageField(
+            validators=[
+                FileExtensionValidator(
+                    allowed_extensions=[
+                        "jpg",
+                        "jpeg",
+                        "png",
+                        "gif",
+                        "webp",
+                        "avif",
+                    ]
+                )
+            ]
+        ),
         write_only=True,
         required=False,
         help_text="Upload multiple images for the bike",

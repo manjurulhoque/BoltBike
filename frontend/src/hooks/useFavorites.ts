@@ -9,7 +9,7 @@ import type {
 } from '@/lib/types';
 import { toast } from 'sonner';
 
-const FAVORITES_BASE_URL = '/api/v1/favorites';
+const FAVORITES_BASE_URL = '/favorites';
 
 // Get user's favorites
 export const useFavorites = () => {

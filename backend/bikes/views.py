@@ -105,13 +105,19 @@ class BikeCreateAPIView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         """Override create method to use custom response format."""
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return api_response(
+                success=True,
+                message="Bike created successfully",
+                data=serializer.data,
+                status_code=status.HTTP_201_CREATED,
+            )
         return api_response(
-            success=True,
-            message="Bike created successfully",
-            data=serializer.data,
-            status_code=status.HTTP_201_CREATED,
+            success=False,
+            message="Invalid data",
+            data=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
 
