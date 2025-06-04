@@ -75,8 +75,8 @@ const bikeApi = {
     },
 
     // Get a specific bike by ID
-    get: async (id: number): Promise<Bike> => {
-        return await apiRequest<Bike>(`/bikes/${id}/`);
+    get: async (id: number): Promise<APIResponse<Bike>> => {
+        return await apiRequest<APIResponse<Bike>>(`/bikes/${id}/`);
     },
 
     // Create a new bike

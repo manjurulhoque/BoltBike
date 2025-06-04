@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import { BikeType, CreateBikeData } from '@/lib/types/bike';
 import { useCreateBike } from '@/hooks/useBikes';
+import { BIKE_TYPES } from '@/lib/constants/bike';
 
 const ListBike = () => {
     const [formData, setFormData] = useState({
@@ -25,7 +26,6 @@ const ListBike = () => {
     const [images, setImages] = useState<string[]>([]);
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [newFeature, setNewFeature] = useState('');
-    const bikeTypes: BikeType[] = ['city', 'mountain', 'road', 'cargo', 'folding', 'hybrid'];
 
     const createBikeMutation = useCreateBike();
 
@@ -186,9 +186,9 @@ const ListBike = () => {
                                         <SelectValue placeholder="Select a type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {bikeTypes.map((type) => (
-                                            <SelectItem key={type} value={type}>
-                                                {type}
+                                        {BIKE_TYPES.map((type) => (
+                                            <SelectItem key={type.value} value={type.value}>
+                                                {type.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Bikes from './pages/Bikes';
 import BikeDetails from './pages/BikeDetails';
 import ListBike from './pages/ListBike';
+import EditBike from './pages/EditBike';
 import MyBikes from './pages/MyBikes';
 import Map from './pages/Map';
 import NotFound from './pages/NotFound';
@@ -34,6 +35,7 @@ function App() {
                     <Route path="/bikes" element={<Bikes />} />
                     <Route path="/bikes/:id" element={<BikeDetails />} />
                     <Route path="/list-bike" element={<ListBike />} />
+                    <Route path="/edit-bike/:id" element={<EditBike />} />
                     <Route path="/my-bikes" element={<MyBikes />} />
                     <Route path="/map" element={<Map />} />
                     <Route path="*" element={<NotFound />} />

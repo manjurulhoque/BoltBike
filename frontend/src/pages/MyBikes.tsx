@@ -16,12 +16,13 @@ import {
 import Header from '@/components/Header';
 import { Link } from 'react-router-dom';
 import { useMyBikes, useDeleteBike, useToggleBikeStatus } from '@/hooks/useBikes';
+import { getBikeStatusColor } from '@/lib/constants/bike';
 
 const MyBikes = () => {
     const { data: myBikesResponse, isLoading, error } = useMyBikes();
     const deleteBikeMutation = useDeleteBike();
     const toggleStatusMutation = useToggleBikeStatus();
-    const bikes = myBikesResponse?.data.results || [];
+    const bikes = myBikesResponse?.data?.results || [];
 
     const handleToggleStatus = (bikeId: number) => {
         toggleStatusMutation.mutate(bikeId);
@@ -29,19 +30,6 @@ const MyBikes = () => {
 
     const handleDeleteBike = (bikeId: number) => {
         deleteBikeMutation.mutate(bikeId);
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'available':
-                return 'bg-green-100 text-green-800';
-            case 'unavailable':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'maintenance':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
     };
 
     if (isLoading) {
@@ -109,7 +97,7 @@ const MyBikes = () => {
                                             <span className="text-gray-400">No image</span>
                                         </div>
                                     )}
-                                    <Badge className={`absolute top-2 right-2 ${getStatusColor(bike.status)}`}>
+                                    <Badge className={`absolute top-2 right-2 ${getBikeStatusColor(bike.status)}`}>
                                         {bike.status}
                                     </Badge>
                                 </div>
@@ -164,19 +152,22 @@ const MyBikes = () => {
                                     <div className="flex justify-between items-center">
                                         <div className="flex space-x-2">
                                             <Link to={`/bikes/${bike.id}`}>
-                                                <Button variant="outline" size="sm">
+                                                <Button variant="outline" size="sm" title="View bike details">
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </Link>
-                                            <Button variant="outline" size="sm">
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
+                                            <Link to={`/edit-bike/${bike.id}`}>
+                                                <Button variant="outline" size="sm" title="Edit bike details">
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
                                                         disabled={deleteBikeMutation.isPending}
+                                                        title="Delete bike"
                                                     >
                                                         <Trash2 className="h-4 w-4 text-red-500" />
                                                     </Button>

@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Filter, Grid, List, Map as MapIcon, SlidersHorizontal, Search, Loader } from 'lucide-react';
+import { Grid, List, Map as MapIcon, SlidersHorizontal, Search, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -18,6 +17,7 @@ import Header from '@/components/Header';
 import BikeMap from '@/components/BikeMap';
 import { BikeType, BikeFilters } from '@/lib/types/bike';
 import { useBikes } from '@/hooks/useBikes';
+import { BIKE_TYPES_WITH_ALL } from '@/lib/constants/bike';
 
 const Bikes = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
@@ -52,8 +52,6 @@ const Bikes = () => {
     };
 
     const { data: bikeResponse, isLoading, error } = useBikes(apiFilters);
-
-    const bikeTypes = ['All Types', 'City', 'Mountain', 'Road', 'Cargo', 'Folding', 'Hybrid'];
     const locations = [
         'All Locations',
         'San Francisco',
@@ -110,7 +108,7 @@ const Bikes = () => {
                                     <SelectValue placeholder="Bike Type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {bikeTypes.map((type) => (
+                                    {BIKE_TYPES_WITH_ALL.map((type) => (
                                         <SelectItem key={type} value={type}>
                                             {type}
                                         </SelectItem>
