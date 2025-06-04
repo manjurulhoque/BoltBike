@@ -15,7 +15,7 @@ import {
 import BikeCard from '@/components/BikeCard';
 import Header from '@/components/Header';
 import BikeMap from '@/components/BikeMap';
-import { BikeType, BikeFilters } from '@/lib/types/bike';
+import { BikeType, BikeFilters, Bike } from '@/lib/types/bike';
 import { useBikes } from '@/hooks/useBikes';
 import { BIKE_TYPES_WITH_ALL } from '@/lib/constants/bike';
 
@@ -65,19 +65,6 @@ const Bikes = () => {
     // Transform bikes for BikeCard component
     const bikes = bikeResponse?.data?.results || [];
     const totalCount = bikeResponse?.data?.count || 0;
-
-    const transformedBikes = bikes.map((bike) => ({
-        id: bike.id.toString(),
-        title: bike.title,
-        location: bike.location,
-        price: bike.daily_rate,
-        rating: 4.5,
-        reviews: 0,
-        images: bike.images.length > 0 ? bike.images.map((img) => img.image_url) : ['/placeholder.svg'],
-        batteryRange: bike.battery_range,
-        type: bike.bike_type as BikeType,
-        available: bike.status === 'available',
-    }));
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -273,7 +260,7 @@ const Bikes = () => {
                         <p className="text-red-500">Error loading bikes. Please try again.</p>
                     </div>
                 ) : viewMode === 'map' ? (
-                    <BikeMap bikes={transformedBikes} />
+                    <BikeMap bikes={bikes} />
                 ) : (
                     <div
                         className={
@@ -282,8 +269,10 @@ const Bikes = () => {
                                 : 'space-y-4'
                         }
                     >
-                        {transformedBikes.length > 0 ? (
-                            transformedBikes.map((bike) => <BikeCard key={bike.id} {...bike} />)
+                        {bikes.length > 0 ? (
+                            bikes.map((bike) => (
+                                <BikeCard key={bike.id} bike={bike} />
+                            ))
                         ) : (
                             <div className="col-span-full text-center py-12">
                                 <p className="text-gray-500">No bikes found matching your criteria.</p>

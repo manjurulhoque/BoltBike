@@ -2,19 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MapPin, Star, Battery } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
-interface Bike {
-    id: string;
-    title: string;
-    location: string;
-    price: number;
-    rating: number;
-    reviews: number;
-    images: string[];
-    batteryRange: number;
-    type: string;
-    available: boolean;
-}
+import { Bike } from '@/lib/types/bike';
 
 interface BikeMapProps {
     bikes: Bike[];
@@ -64,7 +52,7 @@ const BikeMap = ({ bikes }: BikeMapProps) => {
                       data-bike-id="${bike.id}"
                       style="transform: translate(${((index % 3) - 1) * 60}px, ${Math.floor(index / 3) * 40}px)"
                     >
-                      $${bike.price}
+                      $${bike.daily_rate}
                     </div>
                   `,
                       )
@@ -135,7 +123,7 @@ const BikeMap = ({ bikes }: BikeMapProps) => {
                         >
                             <div className="flex items-start space-x-3">
                                 <img
-                                    src={bike.images[0]}
+                                    src={bike.images[0].image_url}
                                     alt={bike.title}
                                     className="w-16 h-16 rounded-lg object-cover"
                                 />
@@ -149,15 +137,15 @@ const BikeMap = ({ bikes }: BikeMapProps) => {
                                         <div className="flex items-center space-x-2">
                                             <div className="flex items-center">
                                                 <Star className="h-3 w-3 fill-current text-yellow-400" />
-                                                <span className="text-xs font-medium ml-1">{bike.rating}</span>
+                                                <span className="text-xs font-medium ml-1">4.5</span>
                                             </div>
                                             <div className="flex items-center text-xs text-gray-600">
                                                 <Battery className="h-3 w-3 mr-1" />
-                                                {bike.batteryRange}km
+                                                {bike.battery_range}km
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <span className="font-semibold text-gray-900">${bike.price}</span>
+                                            <span className="font-semibold text-gray-900">${bike.daily_rate}</span>
                                             <span className="text-xs text-gray-600">/day</span>
                                         </div>
                                     </div>
@@ -180,7 +168,7 @@ const BikeMap = ({ bikes }: BikeMapProps) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <img
-                                src={selectedBike.images[0]}
+                                src={selectedBike.images[0].image_url}
                                 alt={selectedBike.title}
                                 className="w-full h-48 rounded-lg object-cover"
                             />
@@ -194,16 +182,16 @@ const BikeMap = ({ bikes }: BikeMapProps) => {
                             <div className="flex items-center space-x-4">
                                 <div className="flex items-center">
                                     <Star className="h-4 w-4 fill-current text-yellow-400" />
-                                    <span className="font-medium ml-1">{selectedBike.rating}</span>
-                                    <span className="text-gray-600 ml-1">({selectedBike.reviews})</span>
+                                    <span className="font-medium ml-1">4.5</span>
+                                    <span className="text-gray-600 ml-1">(0)</span>
                                 </div>
                                 <div className="flex items-center text-gray-600">
                                     <Battery className="h-4 w-4 mr-1" />
-                                    {selectedBike.batteryRange}km range
+                                    {selectedBike.battery_range}km range
                                 </div>
                             </div>
                             <div className="pt-2">
-                                <span className="text-xl font-bold text-gray-900">${selectedBike.price}</span>
+                                <span className="text-xl font-bold text-gray-900">${selectedBike.daily_rate}</span>
                                 <span className="text-gray-600"> / day</span>
                             </div>
                             <Button className="w-full bg-rose-500 hover:bg-rose-600 mt-4">Book This Bike</Button>

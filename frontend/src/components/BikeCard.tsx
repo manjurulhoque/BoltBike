@@ -3,39 +3,34 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getBikeTypeLabel } from '@/lib/constants';
+import { Bike } from '@/lib/types/bike';
 
 interface BikeCardProps {
-    id: string;
-    title: string;
-    location: string;
-    price: number;
-    rating: number;
-    reviews: number;
-    images: string[];
-    batteryRange: number;
-    type: string;
-    available: boolean;
+    bike: Bike;
 }
 
-const BikeCard = ({
-    id,
-    title,
-    location,
-    price,
-    rating,
-    reviews,
-    images,
-    batteryRange,
-    type,
-    available,
-}: BikeCardProps) => {
+const BikeCard = ({ bike }: BikeCardProps) => {
+    const { id, title, location, daily_rate, battery_range, bike_type, status, images } = bike;
+    let bikeImages = images;
+    if (images.length === 0) {
+        bikeImages = [
+            {
+                image_url: '/placeholder.svg',
+                alt_text: 'Placeholder image',
+            },
+        ];
+    }
+    const available = status === 'available';
+    const rating = 4.5;
+    const reviews = 0;
+
     return (
         <div className="group cursor-pointer">
             <Link to={`/bikes/${id}`}>
                 {/* Image Container */}
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100">
                     <img
-                        src={images[0]}
+                        src={bikeImages[0].image_url}
                         alt={title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -54,7 +49,7 @@ const BikeCard = ({
                             </Badge>
                         </div>
                     )}
-                    <Badge className="absolute top-3 left-3 bg-rose-500">{getBikeTypeLabel(type as any)}</Badge>
+                    <Badge className="absolute top-3 left-3 bg-rose-500">{getBikeTypeLabel(bike_type)}</Badge>
                 </div>
 
                 {/* Content */}
@@ -75,12 +70,12 @@ const BikeCard = ({
 
                     <div className="flex items-center text-sm text-gray-600">
                         <Battery className="h-3 w-3 mr-1" />
-                        <span>{batteryRange}km range</span>
+                        <span>{battery_range}km range</span>
                     </div>
 
                     <div className="flex items-center justify-between pt-1">
                         <div>
-                            <span className="font-semibold text-gray-900">${price}</span>
+                            <span className="font-semibold text-gray-900">${daily_rate}</span>
                             <span className="text-gray-600"> / day</span>
                         </div>
                         {available && (
