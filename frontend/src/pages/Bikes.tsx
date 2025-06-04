@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Filter, Grid, List, Map as MapIcon, SlidersHorizontal, Search } from 'lucide-react';
+import { Filter, Grid, List, Map as MapIcon, SlidersHorizontal, Search, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,8 @@ import {
 import BikeCard from '@/components/BikeCard';
 import Header from '@/components/Header';
 import BikeMap from '@/components/BikeMap';
+import { BikeType, BikeFilters } from '@/lib/types/bike';
+import { useBikes } from '@/hooks/useBikes';
 
 const Bikes = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
@@ -27,6 +29,29 @@ const Bikes = () => {
         location: '',
         sortBy: 'relevance',
     });
+    // Build API filters from UI filters
+    const apiFilters: BikeFilters = {
+        ...(filters.search && { search: filters.search }),
+        ...(filters.type && filters.type !== 'All Types' && { bike_type: filters.type as BikeType }),
+        ...(filters.location && filters.location !== 'All Locations' && { location: filters.location }),
+        min_price: filters.priceRange[0],
+        max_price: filters.priceRange[1],
+        // Set ordering based on sortBy
+        ordering: (() => {
+            switch (filters.sortBy) {
+                case 'price-low':
+                    return 'daily_rate';
+                case 'price-high':
+                    return '-daily_rate';
+                case 'newest':
+                    return '-created_at';
+                default:
+                    return '-created_at';
+            }
+        })(),
+    };
+
+    const { data: bikeResponse, isLoading, error } = useBikes(apiFilters);
 
     const bikeTypes = ['All Types', 'City', 'Mountain', 'Road', 'Cargo', 'Folding', 'Hybrid'];
     const locations = [
@@ -39,88 +64,22 @@ const Bikes = () => {
         'Marin County',
     ];
 
-    const bikes = [
-        {
-            id: '1',
-            title: 'Trek Verve+ 2 Electric Hybrid',
-            location: 'Downtown, San Francisco',
-            price: 45,
-            rating: 4.9,
-            reviews: 127,
-            images: ['/placeholder.svg'],
-            batteryRange: 80,
-            type: 'City',
-            available: true,
-        },
-        {
-            id: '2',
-            title: 'Specialized Turbo Vado SL',
-            location: 'Mission District, SF',
-            price: 65,
-            rating: 4.8,
-            reviews: 89,
-            images: ['/placeholder.svg'],
-            batteryRange: 120,
-            type: 'Road',
-            available: true,
-        },
-        {
-            id: '3',
-            title: 'Rad Power RadCity 5 Plus',
-            location: 'Berkeley, CA',
-            price: 35,
-            rating: 4.7,
-            reviews: 203,
-            images: ['/placeholder.svg'],
-            batteryRange: 72,
-            type: 'City',
-            available: false,
-        },
-        {
-            id: '4',
-            title: 'Canyon Neuron:ON Mountain',
-            location: 'Marin County, CA',
-            price: 85,
-            rating: 4.9,
-            reviews: 156,
-            images: ['/placeholder.svg'],
-            batteryRange: 100,
-            type: 'Mountain',
-            available: true,
-        },
-        {
-            id: '5',
-            title: 'Brompton Electric Folding',
-            location: 'SOMA, San Francisco',
-            price: 55,
-            rating: 4.6,
-            reviews: 92,
-            images: ['/placeholder.svg'],
-            batteryRange: 55,
-            type: 'Folding',
-            available: true,
-        },
-        {
-            id: '6',
-            title: 'Tern GSD S10 Cargo',
-            location: 'Oakland, CA',
-            price: 75,
-            rating: 4.8,
-            reviews: 174,
-            images: ['/placeholder.svg'],
-            batteryRange: 90,
-            type: 'Cargo',
-            available: true,
-        },
-    ];
+    // Transform bikes for BikeCard component
+    const bikes = bikeResponse?.data.results || [];
+    const totalCount = bikeResponse?.data.count || 0;
 
-    const filteredBikes = bikes.filter((bike) => {
-        if (filters.search && !bike.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
-        if (filters.type && filters.type !== 'All Types' && bike.type !== filters.type) return false;
-        if (bike.price < filters.priceRange[0] || bike.price > filters.priceRange[1]) return false;
-        if (bike.batteryRange < filters.batteryRange[0] || bike.batteryRange > filters.batteryRange[1]) return false;
-        return true;
-    });
+    const transformedBikes = bikes.map((bike) => ({
+        id: bike.id.toString(),
+        title: bike.title,
+        location: bike.location,
+        price: bike.daily_rate,
+        rating: 4.5, // Default rating - you might want to add this to your backend
+        reviews: 0, // Default reviews - you might want to add this to your backend
+        images: bike.images.length > 0 ? bike.images.map((img) => img.image_url) : ['/placeholder.svg'],
+        batteryRange: bike.battery_range,
+        type: bike.bike_type,
+        available: bike.status === 'available',
+    }));
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -302,12 +261,21 @@ const Bikes = () => {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">E-bikes for rent</h1>
-                        <p className="text-gray-600">{filteredBikes.length} bikes available</p>
+                        <p className="text-gray-600">{totalCount} bikes available</p>
                     </div>
                 </div>
 
-                {viewMode === 'map' ? (
-                    <BikeMap bikes={filteredBikes} />
+                {isLoading ? (
+                    <div className="flex justify-center items-center py-12">
+                        <Loader className="h-8 w-8 animate-spin text-gray-500" />
+                        <span className="ml-2 text-gray-500">Loading bikes...</span>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-12">
+                        <p className="text-red-500">Error loading bikes. Please try again.</p>
+                    </div>
+                ) : viewMode === 'map' ? (
+                    <BikeMap bikes={transformedBikes} />
                 ) : (
                     <div
                         className={
@@ -316,9 +284,13 @@ const Bikes = () => {
                                 : 'space-y-4'
                         }
                     >
-                        {filteredBikes.map((bike) => (
-                            <BikeCard key={bike.id} {...bike} />
-                        ))}
+                        {transformedBikes.length > 0 ? (
+                            transformedBikes.map((bike) => <BikeCard key={bike.id} {...bike} />)
+                        ) : (
+                            <div className="col-span-full text-center py-12">
+                                <p className="text-gray-500">No bikes found matching your criteria.</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

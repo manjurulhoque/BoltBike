@@ -62,6 +62,13 @@ const Header = () => {
                                 Rent your e-bike
                             </Button>
                         </Link>
+                        {user && (
+                            <Link to="/my-bikes">
+                                <Button variant="ghost" className="hidden md:block text-sm font-medium">
+                                    My Bikes
+                                </Button>
+                            </Link>
+                        )}
                         {/* <Link to="/map">
                             <Button variant="ghost" className="hidden md:block text-sm font-medium">
                                 <Map className="h-4 w-4 mr-1" />

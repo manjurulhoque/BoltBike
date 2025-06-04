@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
-import { useToast } from '@/hooks/use-toast';
+import { BikeType, CreateBikeData } from '@/lib/types/bike';
+import { useCreateBike } from '@/hooks/useBikes';
 
 const ListBike = () => {
     const [formData, setFormData] = useState({
@@ -15,17 +16,18 @@ const ListBike = () => {
         description: '',
         price: '',
         location: '',
-        type: '',
+        bike_type: 'city' as BikeType,
         batteryRange: '',
         maxSpeed: '',
         weight: '',
-        features: [],
+        features: [] as string[],
     });
     const [images, setImages] = useState<string[]>([]);
+    const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [newFeature, setNewFeature] = useState('');
-    const bikeTypes = ['City', 'Mountain', 'Road', 'Cargo', 'Folding', 'Hybrid'];
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const { toast } = useToast();
+    const bikeTypes: BikeType[] = ['city', 'mountain', 'road', 'cargo', 'folding', 'hybrid'];
+
+    const createBikeMutation = useCreateBike();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -33,7 +35,7 @@ const ListBike = () => {
     };
 
     const handleSelectChange = (value: string) => {
-        setFormData((prev) => ({ ...prev, type: value }));
+        setFormData((prev) => ({ ...prev, bike_type: value as BikeType }));
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +43,7 @@ const ListBike = () => {
             const files = Array.from(e.target.files);
             const urls = files.map((file) => URL.createObjectURL(file));
             setImages((prev) => [...prev, ...urls]);
+            setImageFiles((prev) => [...prev, ...files]);
         }
     };
 
@@ -49,6 +52,11 @@ const ListBike = () => {
             const newImages = [...prev];
             newImages.splice(index, 1);
             return newImages;
+        });
+        setImageFiles((prev) => {
+            const newFiles = [...prev];
+            newFiles.splice(index, 1);
+            return newFiles;
         });
     };
 
@@ -68,31 +76,40 @@ const ListBike = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
 
-        // Simulate API submission
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Prepare the bike data
+        const bikeData: CreateBikeData = {
+            title: formData.title,
+            description: formData.description,
+            location: formData.location,
+            daily_rate: parseFloat(formData.price),
+            bike_type: formData.bike_type,
+            battery_range: parseInt(formData.batteryRange),
+            max_speed: parseInt(formData.maxSpeed),
+            weight: parseFloat(formData.weight),
+            features: formData.features,
+            image_files: imageFiles.length > 0 ? imageFiles : undefined,
+        };
 
-        setIsSubmitting(false);
-
-        toast({
-            title: 'Bike Listed Successfully!',
-            description: 'Your e-bike has been added to our platform and is now available for rent.',
+        // Create the bike using mutation
+        createBikeMutation.mutate(bikeData, {
+            onSuccess: () => {
+                // Reset form on success
+                setFormData({
+                    title: '',
+                    description: '',
+                    price: '',
+                    location: '',
+                    bike_type: 'city' as BikeType,
+                    batteryRange: '',
+                    maxSpeed: '',
+                    weight: '',
+                    features: [] as string[],
+                });
+                setImages([]);
+                setImageFiles([]);
+            },
         });
-
-        // Reset form
-        setFormData({
-            title: '',
-            description: '',
-            price: '',
-            location: '',
-            type: '',
-            batteryRange: '',
-            maxSpeed: '',
-            weight: '',
-            features: [],
-        });
-        setImages([]);
     };
 
     return (
@@ -293,8 +310,12 @@ const ListBike = () => {
                         <Button variant="outline" type="button">
                             Save as Draft
                         </Button>
-                        <Button type="submit" className="bg-rose-500 hover:bg-rose-600" disabled={isSubmitting}>
-                            {isSubmitting ? (
+                        <Button
+                            type="submit"
+                            className="bg-rose-500 hover:bg-rose-600"
+                            disabled={createBikeMutation.isPending}
+                        >
+                            {createBikeMutation.isPending ? (
                                 <>
                                     <Loader className="h-4 w-4 mr-2 animate-spin" />
                                     Publishing...

@@ -1,16 +1,28 @@
 # E-Bike Rental Platform
 
-A peer-to-peer e-bike rental platform built with Django REST Framework and React.
+A comprehensive peer-to-peer e-bike rental platform built with Django REST Framework and React. This platform allows users to list their e-bikes for rent and discover available e-bikes in their area.
 
-## Features
+## ✨ Features
 
-- User authentication and profile management
-- Bike listing and management
-- Booking system with availability checking
-- Secure payments with Stripe
-- Maintenance ticket system
-- Rating and review system
-- Admin dashboard
+### 🚴‍♂️ For Bike Owners
+- **Easy Bike Listing**: Add your e-bike with detailed specifications, photos, and pricing
+- **Inventory Management**: View and manage all your listed bikes in one place
+- **Status Control**: Toggle bike availability (available/unavailable/maintenance)
+- **Earnings Tracking**: Monitor your rental income and booking history
+
+### 🔍 For Renters
+- **Advanced Search & Filtering**: Find bikes by location, type, price range, and battery range
+- **Multiple View Modes**: Browse bikes in grid, list, or map view
+- **Detailed Bike Information**: View comprehensive bike specs, features, and photos
+- **Real-time Availability**: See which bikes are available for your dates
+
+### 🛠️ Technical Features
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **Real-time Updates**: Live status updates and notifications
+- **Secure Authentication**: JWT-based user authentication
+- **RESTful API**: Well-documented API with Swagger/OpenAPI
+- **Image Management**: Support for multiple bike photos
+- **Maintenance System**: Track and manage bike maintenance issues
 
 ## Tech Stack
 
@@ -23,11 +35,13 @@ A peer-to-peer e-bike rental platform built with Django REST Framework and React
 - AWS S3 (optional)
 
 ### Frontend
-- React
+- React 18
 - TypeScript
-- Material-UI
-- Redux Toolkit
+- Tailwind CSS
+- Shadcn/ui Components
 - React Router
+- TanStack Query
+- Lucide Icons
 
 ## Getting Started
 
@@ -38,59 +52,60 @@ A peer-to-peer e-bike rental platform built with Django REST Framework and React
 - PostgreSQL
 - Stripe account (for payments)
 
-### Backend Setup
+### Quick Setup (Recommended)
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/manjurulhoque/e-bike-rent.git
+git clone <repository-url>
 cd e-bike-rent
 ```
 
-2. Create and activate a virtual environment:
+2. Run the automated setup script:
+```bash
+python setup_backend.py
+```
+
+This script will:
+- Install all Python dependencies
+- Create database migrations
+- Apply migrations
+- Optionally create a superuser account
+
+3. Start the backend server:
+```bash
+cd backend
+python manage.py runserver
+```
+
+### Manual Backend Setup
+
+If you prefer manual setup or the automated script doesn't work:
+
+1. Create and activate a virtual environment:
 ```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
+pip install django-filter>=23.0 Pillow>=10.0.0
 ```
 
-4. Create a `.env` file in the backend directory (copy from `.env.example`):
+3. Create and apply migrations:
 ```bash
-cp .env.example .env
-```
-
-5. Update the `.env` file with your configuration:
-```
-DJANGO_SECRET_KEY=your-secret-key
-DJANGO_DEBUG=True
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-
-DB_NAME=ebike_rent
-DB_USER=postgres
-DB_PASSWORD=your-password
-DB_HOST=localhost
-DB_PORT=5432
-
-STRIPE_PUBLIC_KEY=your-stripe-public-key
-STRIPE_SECRET_KEY=your-stripe-secret-key
-STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
-```
-
-6. Run migrations:
-```bash
+python manage.py makemigrations
 python manage.py migrate
 ```
 
-7. Create a superuser:
+4. Create a superuser:
 ```bash
 python manage.py createsuperuser
 ```
 
-8. Run the development server:
+5. Run the development server:
 ```bash
 python manage.py runserver
 ```
@@ -101,7 +116,7 @@ The backend API will be available at `http://localhost:8000/api/v1/`
 
 1. Navigate to the frontend directory:
 ```bash
-cd ../frontend
+cd frontend
 ```
 
 2. Install dependencies:
@@ -109,29 +124,71 @@ cd ../frontend
 npm install
 ```
 
-3. Create a `.env` file (copy from `.env.example`):
+3. Start the development server:
 ```bash
-cp .env.example .env
+npm run dev
 ```
 
-4. Update the `.env` file with your configuration:
-```
-REACT_APP_API_URL=http://localhost:8000/api/v1
-REACT_APP_STRIPE_PUBLIC_KEY=your-stripe-public-key
-```
+The frontend will be available at `http://localhost:5173`
 
-5. Start the development server:
-```bash
-npm start
-```
+## 🚀 Usage Guide
 
-The frontend will be available at `http://localhost:3000`
+### For Bike Owners
 
-## API Documentation
+1. **Sign up/Login** to your account
+2. **List a Bike**: 
+   - Click "Rent your e-bike" in the header
+   - Fill in bike details (title, description, location, pricing)
+   - Add bike specifications (type, battery range, max speed, weight)
+   - Upload photos and add features
+   - Publish your listing
+3. **Manage Your Bikes**:
+   - Visit "My Bikes" to see all your listings
+   - Toggle availability status
+   - Edit bike details
+   - View booking requests
 
-API documentation is available at:
-- Swagger UI: `http://localhost:8000/swagger/`
-- ReDoc: `http://localhost:8000/redoc/`
+### For Renters
+
+1. **Browse Bikes**:
+   - Visit the "Bikes" page to see all available bikes
+   - Use filters to narrow down options (type, location, price range)
+   - Switch between grid, list, and map views
+2. **Search & Filter**:
+   - Search by bike title or description
+   - Filter by bike type (City, Mountain, Road, etc.)
+   - Set price and battery range filters
+   - Sort by price, rating, or newest listings
+3. **View Details**:
+   - Click on any bike to see detailed information
+   - View photos, specifications, and features
+   - Check availability and pricing
+
+## 📚 API Documentation
+
+The API provides comprehensive endpoints for bike management:
+
+### Bike Endpoints
+- `GET /api/v1/bikes/` - List all bikes with filtering
+- `POST /api/v1/bikes/` - Create a new bike listing
+- `GET /api/v1/bikes/{id}/` - Get bike details
+- `PATCH /api/v1/bikes/{id}/` - Update bike information
+- `DELETE /api/v1/bikes/{id}/` - Delete a bike
+- `GET /api/v1/bikes/my-bikes/` - Get current user's bikes
+- `POST /api/v1/bikes/{id}/toggle-status/` - Toggle bike availability
+
+### Available Filters
+- `search` - Search in title and description
+- `bike_type` - Filter by bike type
+- `location` - Filter by location
+- `min_price` / `max_price` - Price range filtering
+- `available_only` - Show only available bikes
+- `owner` - Filter by owner (use 'me' for current user)
+- `ordering` - Sort results (created_at, daily_rate, etc.)
+
+### Interactive Documentation
+- **Swagger UI**: `http://localhost:8000/swagger/`
+- **ReDoc**: `http://localhost:8000/redoc/`
 
 ## Testing
 

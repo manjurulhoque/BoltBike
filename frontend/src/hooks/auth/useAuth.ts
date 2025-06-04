@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { LoginCredentials, SignupCredentials, AuthResponse, User } from '@/lib/types/auth';
+import { APIResponse } from '@/lib/types/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1/users';
 
@@ -26,12 +27,22 @@ export const useLogin = () => {
                 body: JSON.stringify(credentials),
             });
 
+            const responseData: AuthResponse = await response.json();
+
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Login failed');
+                const errorMessage = responseData.message || (responseData as any).detail || 'Login failed';
+                throw new Error(errorMessage);
             }
 
-            return response.json() as Promise<AuthResponse>;
+            // Handle custom response format
+            if (responseData.hasOwnProperty('success') && responseData.hasOwnProperty('data')) {
+                if (!responseData.success) {
+                    throw new Error(responseData.message || 'Login failed');
+                }
+                return responseData;
+            }
+
+            return responseData;
         },
         onSuccess: (data) => {
             localStorage.setItem('token', data.data.access);
@@ -54,12 +65,22 @@ export const useSignup = () => {
                 body: JSON.stringify(credentials),
             });
 
+            const responseData: APIResponse<User> = await response.json();
+
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Signup failed');
+                const errorMessage = responseData.message || (responseData as any).detail || 'Signup failed';
+                throw new Error(errorMessage);
             }
 
-            return response.json() as Promise<User>;
+            // Handle custom response format
+            if (responseData.hasOwnProperty('success') && responseData.hasOwnProperty('data')) {
+                if (!responseData.success) {
+                    throw new Error(responseData.message || 'Signup failed');
+                }
+                return responseData.data;
+            }
+
+            return responseData as unknown as User;
         },
         onSuccess: () => {
             navigate('/login');
@@ -76,12 +97,22 @@ export const useUser = () => {
                 headers: getAuthHeaders(),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch user');
-            }
-            const data = await response.json();
+            const responseData: APIResponse<User> = await response.json();
 
-            return data.data as User;
+            if (!response.ok) {
+                const errorMessage = responseData.message || 'Failed to fetch user';
+                throw new Error(errorMessage);
+            }
+
+            // Handle custom response format
+            if (responseData.hasOwnProperty('success') && responseData.hasOwnProperty('data')) {
+                if (!responseData.success) {
+                    throw new Error(responseData.message || 'Failed to fetch user');
+                }
+                return responseData.data as User;
+            }
+
+            return responseData as unknown as User;
         },
         enabled: !!localStorage.getItem('token'),
     });
