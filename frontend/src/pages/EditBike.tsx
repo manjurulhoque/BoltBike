@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader, X, ArrowLeft, Save, Plus } from 'lucide-react';
+import { Loader, X, ArrowLeft, Save, Plus, Upload, Trash2, Star } from 'lucide-react';
 import Header from '@/components/Header';
 import { useBike, useUpdateBike } from '@/hooks/useBikes';
-import { BikeType, BikeStatus, UpdateBikeData } from '@/lib/types/bike';
+import { BikeType, BikeStatus, UpdateBikeData, BikeImage } from '@/lib/types/bike';
 import { BIKE_TYPES, BIKE_STATUSES } from '@/lib/constants/bike';
+import { toast } from 'sonner';
 
 const EditBike = () => {
     const { id } = useParams<{ id: string }>();
@@ -39,6 +40,11 @@ const EditBike = () => {
 
     const [newFeature, setNewFeature] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Image management state
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [imagesToDelete, setImagesToDelete] = useState<number[]>([]);
+    const [primaryImageId, setPrimaryImageId] = useState<number | undefined>();
 
     // Initialize form data when bike loads
     useEffect(() => {
@@ -83,21 +89,67 @@ const EditBike = () => {
         }));
     };
 
+    // Image management functions
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target.files || []);
+        setSelectedFiles((prev) => [...prev, ...files]);
+    };
+
+    const removeSelectedFile = (index: number) => {
+        setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const toggleImageForDeletion = (imageId: number) => {
+        setImagesToDelete((prev) => {
+            if (prev.includes(imageId)) {
+                return prev.filter((id) => id !== imageId);
+            } else {
+                return [...prev, imageId];
+            }
+        });
+    };
+
+    const setPrimaryImage = (imageId: number) => {
+        setPrimaryImageId(imageId);
+        // Remove from delete list if it was marked for deletion
+        setImagesToDelete((prev) => prev.filter((id) => id !== imageId));
+    };
+
+    const getAvailableImages = () => {
+        return bike?.images.filter((img) => !imagesToDelete.includes(img.id || 0)) || [];
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         try {
+            const updateData: UpdateBikeData = {
+                ...formData,
+                hourly_rate: formData.hourly_rate || undefined,
+            };
+
+            // Add image management data
+            if (selectedFiles.length > 0) {
+                updateData.image_files = selectedFiles;
+            }
+            if (imagesToDelete.length > 0) {
+                updateData.delete_image_ids = imagesToDelete;
+            }
+            if (primaryImageId) {
+                updateData.primary_image_id = primaryImageId;
+            }
+
             await updateBikeMutation.mutateAsync({
                 id: bikeId,
-                data: {
-                    ...formData,
-                    hourly_rate: formData.hourly_rate || undefined,
-                },
+                data: updateData,
             });
+
+            toast.success('Bike updated successfully!');
             navigate('/my-bikes');
         } catch (error) {
             console.error('Update failed:', error);
+            toast.error('Failed to update bike. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -363,6 +415,164 @@ const EditBike = () => {
                                             </button>
                                         </Badge>
                                     ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Image Management */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Image Management</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {/* Current Images */}
+                            {bike && bike.images.length > 0 && (
+                                <div>
+                                    <Label className="text-base font-medium">Current Images</Label>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
+                                        {bike.images.map((image) => (
+                                            <div
+                                                key={image.id}
+                                                className={`relative border-2 rounded-lg overflow-hidden ${
+                                                    imagesToDelete.includes(image.id || 0)
+                                                        ? 'border-red-300 bg-red-50'
+                                                        : image.is_primary
+                                                        ? 'border-yellow-400 bg-yellow-50'
+                                                        : 'border-gray-200'
+                                                }`}
+                                            >
+                                                <img
+                                                    src={image.image_url || '/placeholder.svg'}
+                                                    alt={image.alt_text || 'Bike image'}
+                                                    className={`w-full h-32 object-cover ${
+                                                        imagesToDelete.includes(image.id || 0) ? 'opacity-50' : ''
+                                                    }`}
+                                                />
+
+                                                {/* Primary badge */}
+                                                {image.is_primary && !imagesToDelete.includes(image.id || 0) && (
+                                                    <div className="absolute top-2 left-2">
+                                                        <Badge className="bg-yellow-500 text-white text-xs">
+                                                            <Star className="h-3 w-3 mr-1" />
+                                                            Primary
+                                                        </Badge>
+                                                    </div>
+                                                )}
+
+                                                {/* Action buttons */}
+                                                <div className="absolute top-2 right-2 flex space-x-1">
+                                                    {!imagesToDelete.includes(image.id || 0) && !image.is_primary && (
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            className="h-6 w-6 p-1"
+                                                            onClick={() => setPrimaryImage(image.id || 0)}
+                                                            title="Set as primary"
+                                                        >
+                                                            <Star className="h-3 w-3" />
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant={
+                                                            imagesToDelete.includes(image.id || 0)
+                                                                ? 'default'
+                                                                : 'destructive'
+                                                        }
+                                                        className="h-6 w-6 p-1"
+                                                        onClick={() => toggleImageForDeletion(image.id || 0)}
+                                                        title={
+                                                            imagesToDelete.includes(image.id || 0)
+                                                                ? 'Cancel deletion'
+                                                                : 'Mark for deletion'
+                                                        }
+                                                    >
+                                                        {imagesToDelete.includes(image.id || 0) ? (
+                                                            <X className="h-3 w-3" />
+                                                        ) : (
+                                                            <Trash2 className="h-3 w-3" />
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Upload New Images */}
+                            <div>
+                                <Label htmlFor="new-images" className="text-base font-medium">
+                                    Add New Images
+                                </Label>
+                                <div className="mt-2">
+                                    <Input
+                                        id="new-images"
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleFileSelect}
+                                        className="mb-2"
+                                    />
+                                    <p className="text-sm text-gray-500">
+                                        Select multiple images to upload. Supported formats: JPG, PNG, GIF, WebP, AVIF
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Selected Files Preview */}
+                            {selectedFiles.length > 0 && (
+                                <div>
+                                    <Label className="text-base font-medium">New Images to Upload</Label>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
+                                        {selectedFiles.map((file, index) => (
+                                            <div
+                                                key={index}
+                                                className="relative border-2 border-green-300 bg-green-50 rounded-lg overflow-hidden"
+                                            >
+                                                <img
+                                                    src={URL.createObjectURL(file)}
+                                                    alt={`New upload ${index + 1}`}
+                                                    className="w-full h-32 object-cover"
+                                                />
+                                                <div className="absolute top-2 left-2">
+                                                    <Badge className="bg-green-500 text-white text-xs">
+                                                        <Upload className="h-3 w-3 mr-1" />
+                                                        New
+                                                    </Badge>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    className="absolute top-2 right-2 h-6 w-6 p-1"
+                                                    onClick={() => removeSelectedFile(index)}
+                                                    title="Remove from upload"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Image Management Summary */}
+                            {(imagesToDelete.length > 0 || selectedFiles.length > 0 || primaryImageId) && (
+                                <div className="bg-blue-50 p-4 rounded-lg">
+                                    <h4 className="font-medium text-blue-900 mb-2">Changes Summary:</h4>
+                                    <ul className="space-y-1 text-sm text-blue-800">
+                                        {imagesToDelete.length > 0 && (
+                                            <li>• {imagesToDelete.length} image(s) will be deleted</li>
+                                        )}
+                                        {selectedFiles.length > 0 && (
+                                            <li>• {selectedFiles.length} new image(s) will be uploaded</li>
+                                        )}
+                                        {primaryImageId && <li>• Primary image will be updated</li>}
+                                    </ul>
                                 </div>
                             )}
                         </CardContent>

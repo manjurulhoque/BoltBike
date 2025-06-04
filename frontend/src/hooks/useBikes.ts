@@ -131,10 +131,61 @@ const bikeApi = {
 
     // Update an existing bike
     update: async (id: number, data: UpdateBikeData): Promise<Bike> => {
-        return await apiRequest<Bike>(`/bikes/${id}/`, {
-            method: 'PATCH',
-            body: JSON.stringify(data),
-        });
+        // Check if we have files to upload
+        const hasFiles = data.image_files && data.image_files.length > 0;
+
+        if (hasFiles) {
+            // Use FormData for file uploads
+            const formData = new FormData();
+
+            // Add all bike data fields
+            Object.entries(data).forEach(([key, value]) => {
+                if (key === 'image_files' && value) {
+                    // Handle file uploads
+                    (value as File[]).forEach((file) => {
+                        formData.append('image_files', file);
+                    });
+                } else if (key === 'features' && Array.isArray(value)) {
+                    // Handle features array
+                    formData.append('features', JSON.stringify(value));
+                } else if (key === 'delete_image_ids' && Array.isArray(value)) {
+                    // Handle delete image IDs array
+                    value.forEach((id) => {
+                        formData.append('delete_image_ids', String(id));
+                    });
+                } else if (value !== undefined && value !== null) {
+                    formData.append(key, String(value));
+                }
+            });
+
+            const response = await fetch(`${API_BASE_URL}/bikes/${id}/`, {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${getAuthToken()}`,
+                    // Don't set Content-Type for FormData - browser will set it with boundary
+                },
+                body: formData,
+            });
+
+            const responseData: APIResponse<Bike> = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                const errorMessage =
+                    responseData.message ||
+                    (responseData as any).detail ||
+                    (responseData as any).error ||
+                    `HTTP ${response.status}`;
+                throw new Error(errorMessage);
+            }
+
+            return responseData.data || (responseData as any);
+        } else {
+            // Use JSON for text-only updates
+            return await apiRequest<Bike>(`/bikes/${id}/`, {
+                method: 'PATCH',
+                body: JSON.stringify(data),
+            });
+        }
     },
 
     // Delete a bike
@@ -303,7 +354,10 @@ export const useUpdateBike = () => {
         mutationFn: ({ id, data }: { id: number; data: UpdateBikeData }) => bikeApi.update(id, data),
         onSuccess: (updatedBike) => {
             // Update bike in cache
-            queryClient.setQueryData(bikeKeys.detail(updatedBike.id), updatedBike);
+            queryClient.setQueryData(bikeKeys.detail(updatedBike.id), {
+                success: true,
+                data: updatedBike,
+            });
 
             // Invalidate lists to ensure consistency
             queryClient.invalidateQueries({ queryKey: bikeKeys.lists() });
