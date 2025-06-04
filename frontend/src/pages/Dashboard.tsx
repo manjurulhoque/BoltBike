@@ -17,14 +17,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useLogout, useUser } from '@/hooks/auth/useAuth';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useMyBikes } from '@/hooks/useBikes';
+import BikeCard from '@/components/BikeCard';
+import DashboardBikeCard from '@/components/DashboardBikeCard';
 
 const Dashboard = () => {
+    const { data: myBikesResponse } = useMyBikes();
     const { data: user, isLoading } = useUser();
     const [activeTab, setActiveTab] = useState('bookings');
     const logout = useLogout();
-    const navigate = useNavigate();
     const { first_name, last_name, email, phone } = user || {};
+    const myBikes = myBikesResponse?.data?.results || [];
 
     const bookings = [
         {
@@ -100,8 +104,10 @@ const Dashboard = () => {
                         </h1>
                         <div className="flex items-center space-x-4">
                             <Button variant="outline">
-                                <Plus className="h-4 w-4 mr-2" />
-                                List your bike
+                                <Link to="/list-bike" className="flex items-center">
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    List your bike
+                                </Link>
                             </Button>
                             <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center">
                                 <User className="h-4 w-4 text-white" />
@@ -185,7 +191,10 @@ const Dashboard = () => {
                             </nav>
 
                             <div className="border-t mt-6 pt-4">
-                                <button className="w-full flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md">
+                                <button
+                                    onClick={logout}
+                                    className="w-full flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
+                                >
                                     <LogOut className="h-5 w-5 mr-3" />
                                     Sign out
                                 </button>
@@ -284,14 +293,20 @@ const Dashboard = () => {
                                         Add New Bike
                                     </Button>
                                 </div>
-                                <div className="text-center py-12">
-                                    <Bike className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No bikes listed yet</h3>
-                                    <p className="text-gray-600 mb-4">
-                                        Start earning by renting out your e-bike to the community
-                                    </p>
-                                    <Button className="bg-rose-500 hover:bg-rose-600">List Your First Bike</Button>
-                                </div>
+                                {myBikes.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {myBikes.map((bike) => (
+                                            <DashboardBikeCard key={bike.id} bike={bike} showManageButtons={true} />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <Bike className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                            No bikes listed yet
+                                        </h3>
+                                    </div>
+                                )}
                             </div>
                         )}
 

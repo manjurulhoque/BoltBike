@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginCredentials, SignupCredentials, AuthResponse, User } from '@/lib/types/auth';
 import { APIResponse } from '@/lib/types/api';
+import { useAuthToken } from '../useAuthToken';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1/users';
 
@@ -19,6 +20,7 @@ export const useLogin = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const queryClient = useQueryClient();
+    const { setAuthToken } = useAuthToken();
 
     return useMutation({
         mutationFn: async (credentials: LoginCredentials) => {
@@ -46,7 +48,7 @@ export const useLogin = () => {
             return responseData;
         },
         onSuccess: (data) => {
-            localStorage.setItem('token', data.data.access);
+            setAuthToken(data.data.access);
             localStorage.setItem('refreshToken', data.data.refresh);
             queryClient.invalidateQueries({ queryKey: ['user'] });
 
@@ -94,9 +96,19 @@ export const useSignup = () => {
 
 // Get current user
 export const useUser = () => {
+    const { hasToken, token } = useAuthToken();
+
+    // Debug logging (remove in production)
+    console.log('useUser - hasToken:', hasToken, 'token exists:', !!token);
+
     return useQuery({
-        queryKey: ['user'],
+        queryKey: ['user'], // Stable query key
         queryFn: async () => {
+            // Double-check token exists before making the request
+            if (!token) {
+                throw new Error('No authentication token available');
+            }
+
             const response = await fetch(`${API_URL}/me/`, {
                 headers: getAuthHeaders(),
             });
@@ -118,7 +130,15 @@ export const useUser = () => {
 
             return responseData as unknown as User;
         },
-        enabled: !!localStorage.getItem('token'),
+        enabled: hasToken && !!token, // Double-check both conditions
+        staleTime: 1000 * 60 * 10, // 10 minutes - user data rarely changes
+        gcTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+        refetchOnMount: false, // Don't refetch on every component mount
+        refetchOnWindowFocus: false, // Don't refetch when window gains focus
+        refetchOnReconnect: false, // Don't refetch on network reconnect
+        retry: false, // Don't retry failed requests (auth errors)
+        networkMode: 'online', // Only run when online
+        notifyOnChangeProps: ['data', 'error'], // Only notify when data or error changes
     });
 };
 
@@ -126,10 +146,10 @@ export const useUser = () => {
 export const useLogout = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { removeAuthToken } = useAuthToken();
 
     return () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
+        removeAuthToken();
         queryClient.clear();
         navigate('/login');
     };
