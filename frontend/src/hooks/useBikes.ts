@@ -80,7 +80,7 @@ const bikeApi = {
     },
 
     // Create a new bike
-    create: async (data: CreateBikeData): Promise<Bike> => {
+    create: async (data: CreateBikeData): Promise<APIResponse<Bike>> => {
         const formData = new FormData();
 
         // Add all bike data fields
@@ -98,7 +98,7 @@ const bikeApi = {
             }
         });
 
-        const response = await fetch(`${API_BASE_URL}/bikes/`, {
+        const response = await fetch(`${API_BASE_URL}/bikes/create/`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${getAuthToken()}`,
@@ -119,14 +119,14 @@ const bikeApi = {
         }
 
         // Handle custom response format
-        if (responseData.hasOwnProperty('success') && responseData.hasOwnProperty('data')) {
-            if (!responseData.success) {
-                throw new Error(responseData.message || 'Request failed');
-            }
-            return responseData.data;
-        }
+        // if (responseData.hasOwnProperty('success') && responseData.hasOwnProperty('data')) {
+        //     if (!responseData.success) {
+        //         throw new Error(responseData.message || 'Request failed');
+        //     }
+        //     return responseData.data;
+        // }
 
-        return responseData as unknown as Bike;
+        return responseData;
     },
 
     // Update an existing bike
@@ -269,7 +269,7 @@ export const useCreateBike = () => {
     const queryClient = useQueryClient();
     const { toast } = useToast();
 
-    return useMutation<Bike, Error, CreateBikeData>({
+    return useMutation<APIResponse<Bike>, Error, CreateBikeData>({
         mutationFn: (data: CreateBikeData) => bikeApi.create(data),
         onSuccess: (newBike) => {
             // Invalidate and refetch bikes list
@@ -277,7 +277,7 @@ export const useCreateBike = () => {
             queryClient.invalidateQueries({ queryKey: bikeKeys.myBikes() });
 
             // Add the new bike to cache
-            queryClient.setQueryData(bikeKeys.detail(newBike.id), newBike);
+            queryClient.setQueryData(bikeKeys.detail(newBike.data.id), newBike.data);
 
             toast({
                 title: 'Bike Listed Successfully!',

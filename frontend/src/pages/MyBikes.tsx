@@ -16,7 +16,7 @@ import {
 import Header from '@/components/Header';
 import { Link } from 'react-router-dom';
 import { useMyBikes, useDeleteBike, useToggleBikeStatus } from '@/hooks/useBikes';
-import { getBikeStatusColor } from '@/lib/constants/bike';
+import { getBikeStatusColor, getBikeStatusLabel, getBikeTypeLabel } from '@/lib/constants/bike';
 
 const MyBikes = () => {
     const { data: myBikesResponse, isLoading, error } = useMyBikes();
@@ -98,7 +98,7 @@ const MyBikes = () => {
                                         </div>
                                     )}
                                     <Badge className={`absolute top-2 right-2 ${getBikeStatusColor(bike.status)}`}>
-                                        {bike.status}
+                                        {getBikeStatusLabel(bike.status as any)}
                                     </Badge>
                                 </div>
 
@@ -116,7 +116,7 @@ const MyBikes = () => {
                                     <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                                         <div>
                                             <span className="text-gray-500">Type:</span>
-                                            <span className="ml-1 font-medium">{bike.bike_type}</span>
+                                            <span className="ml-1 font-medium">{getBikeTypeLabel(bike.bike_type as any)}</span>
                                         </div>
                                         <div>
                                             <span className="text-gray-500">Range:</span>

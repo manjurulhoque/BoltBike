@@ -2,6 +2,7 @@ import { Heart, Star, Battery, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { getBikeTypeLabel } from '@/lib/constants';
 
 interface BikeCardProps {
     id: string;
@@ -30,7 +31,7 @@ const BikeCard = ({
 }: BikeCardProps) => {
     return (
         <div className="group cursor-pointer">
-            <Link to={`/bike/${id}`}>
+            <Link to={`/bikes/${id}`}>
                 {/* Image Container */}
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-gray-100">
                     <img
@@ -53,7 +54,7 @@ const BikeCard = ({
                             </Badge>
                         </div>
                     )}
-                    <Badge className="absolute top-3 left-3 bg-rose-500">{type}</Badge>
+                    <Badge className="absolute top-3 left-3 bg-rose-500">{getBikeTypeLabel(type as any)}</Badge>
                 </div>
 
                 {/* Content */}

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginCredentials, SignupCredentials, AuthResponse, User } from '@/lib/types/auth';
 import { APIResponse } from '@/lib/types/api';
 
@@ -17,6 +17,7 @@ const getAuthHeaders = () => {
 // Login mutation
 export const useLogin = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -48,7 +49,10 @@ export const useLogin = () => {
             localStorage.setItem('token', data.data.access);
             localStorage.setItem('refreshToken', data.data.refresh);
             queryClient.invalidateQueries({ queryKey: ['user'] });
-            navigate('/');
+
+            // Check if we should redirect back to the originally requested page
+            const from = location.state?.from?.pathname || '/';
+            navigate(from, { replace: true });
         },
     });
 };

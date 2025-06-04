@@ -12,6 +12,7 @@ import MyBikes from './pages/MyBikes';
 import Map from './pages/Map';
 import NotFound from './pages/NotFound';
 import Index from './pages/Index';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -31,13 +32,41 @@ function App() {
                     <Route path="/" element={<Index />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/bikes" element={<Bikes />} />
                     <Route path="/bikes/:id" element={<BikeDetails />} />
-                    <Route path="/list-bike" element={<ListBike />} />
-                    <Route path="/edit-bike/:id" element={<EditBike />} />
-                    <Route path="/my-bikes" element={<MyBikes />} />
                     <Route path="/map" element={<Map />} />
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/list-bike"
+                        element={
+                            <ProtectedRoute>
+                                <ListBike />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/edit-bike/:id"
+                        element={
+                            <ProtectedRoute>
+                                <EditBike />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/my-bikes"
+                        element={
+                            <ProtectedRoute>
+                                <MyBikes />
+                            </ProtectedRoute>
+                        }
+                    />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </Router>

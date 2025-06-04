@@ -1,4 +1,7 @@
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import BikeCard from './BikeCard';
+import { Button } from './ui/button';
 
 const BikeGrid = () => {
     // Sample bike data
@@ -112,6 +115,14 @@ const BikeGrid = () => {
                 {bikes.map((bike) => (
                     <BikeCard key={bike.id} {...bike} />
                 ))}
+            </div>
+            <div className="flex justify-center">
+                <Button variant="outline" size="sm" asChild className="mt-20">
+                    <Link to="/bikes">
+                        <ArrowRight className="h-4 w-4" />
+                        View all bikes
+                    </Link>
+                </Button>
             </div>
         </div>
     );

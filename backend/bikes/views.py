@@ -2,60 +2,68 @@ from django.shortcuts import render
 from rest_framework import serializers
 from rest_framework import generics, status, filters
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+    AllowAny,
+)
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 
 from .models import Bike, BikeImage, MaintenanceTicket
-from .serializers import BikeSerializer, BikeImageSerializer, MaintenanceTicketSerializer
+from .serializers import (
+    BikeSerializer,
+    BikeImageSerializer,
+    MaintenanceTicketSerializer,
+)
 from utils.response import api_response
 
 
-class BikeListCreateAPIView(generics.ListCreateAPIView):
-    """List all bikes or create a new bike."""
+class BikeListAPIView(generics.ListAPIView):
+    """List all bikes with filtering and search."""
+
     serializer_class = BikeSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status', 'location']
-    search_fields = ['title', 'description', 'location']
-    ordering_fields = ['created_at', 'hourly_rate', 'daily_rate']
-    ordering = ['-created_at']
+    permission_classes = [AllowAny]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    filterset_fields = ["status", "location"]
+    search_fields = ["title", "description", "location"]
+    ordering_fields = ["created_at", "hourly_rate", "daily_rate"]
+    ordering = ["-created_at"]
 
     def get_queryset(self):
         """Get bikes based on query parameters."""
         queryset = Bike.objects.all()
-        
+
         # Filter by owner if requested
-        owner = self.request.query_params.get('owner')
-        if owner == 'me' and self.request.user.is_authenticated:
+        owner = self.request.query_params.get("owner")
+        if owner == "me" and self.request.user.is_authenticated:
             queryset = queryset.filter(owner=self.request.user)
-        elif owner and owner != 'me':
+        elif owner and owner != "me":
             queryset = queryset.filter(owner__id=owner)
-        
+
         # Filter by availability
-        available_only = self.request.query_params.get('available_only')
-        if available_only and available_only.lower() == 'true':
-            queryset = queryset.filter(status='available')
-        
+        available_only = self.request.query_params.get("available_only")
+        if available_only and available_only.lower() == "true":
+            queryset = queryset.filter(status="available")
+
         # Filter by price range
-        min_price = self.request.query_params.get('min_price')
-        max_price = self.request.query_params.get('max_price')
+        min_price = self.request.query_params.get("min_price")
+        max_price = self.request.query_params.get("max_price")
         if min_price:
             queryset = queryset.filter(daily_rate__gte=min_price)
         if max_price:
             queryset = queryset.filter(daily_rate__lte=max_price)
-            
-        return queryset
 
-    def perform_create(self, serializer):
-        """Set the owner to the current user when creating a bike."""
-        serializer.save(owner=self.request.user)
+        return queryset
 
     def list(self, request, *args, **kwargs):
         """Override list method to use custom response format."""
         queryset = self.filter_queryset(self.get_queryset())
-        
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -75,13 +83,24 @@ class BikeListCreateAPIView(generics.ListCreateAPIView):
             success=True,
             message="Bikes fetched successfully",
             data={
-                'results': data,
-                'count': self.paginator.page.paginator.count,
-                'next': self.paginator.get_next_link(),
-                'previous': self.paginator.get_previous_link(),
+                "results": data,
+                "count": self.paginator.page.paginator.count,
+                "next": self.paginator.get_next_link(),
+                "previous": self.paginator.get_previous_link(),
             },
             status_code=status.HTTP_200_OK,
         )
+
+
+class BikeCreateAPIView(generics.CreateAPIView):
+    """Create a new bike (authenticated users only)."""
+
+    serializer_class = BikeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        """Set the owner to the current user when creating a bike."""
+        serializer.save(owner=self.request.user)
 
     def create(self, request, *args, **kwargs):
         """Override create method to use custom response format."""
@@ -98,6 +117,7 @@ class BikeListCreateAPIView(generics.ListCreateAPIView):
 
 class BikeDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update or delete a bike."""
+
     serializer_class = BikeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -106,7 +126,7 @@ class BikeDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         """Only the owner can update or delete their bike."""
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+        if self.request.method in ["PUT", "PATCH", "DELETE"]:
             return [IsAuthenticated()]
         return [permission() for permission in self.permission_classes]
 
@@ -131,12 +151,12 @@ class BikeDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
                 data=None,
                 status_code=status.HTTP_403_FORBIDDEN,
             )
-        
-        partial = kwargs.pop('partial', False)
+
+        partial = kwargs.pop("partial", False)
         serializer = self.get_serializer(bike, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        
+
         return api_response(
             success=True,
             message="Bike updated successfully",
@@ -154,7 +174,7 @@ class BikeDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
                 data=None,
                 status_code=status.HTTP_403_FORBIDDEN,
             )
-        
+
         self.perform_destroy(bike)
         return api_response(
             success=True,
@@ -166,6 +186,7 @@ class BikeDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 class MyBikesAPIView(generics.ListAPIView):
     """List bikes owned by the current user."""
+
     serializer_class = BikeSerializer
     permission_classes = [IsAuthenticated]
 
@@ -175,7 +196,7 @@ class MyBikesAPIView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         """Override list method to use custom response format."""
         queryset = self.filter_queryset(self.get_queryset())
-        
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -188,17 +209,17 @@ class MyBikesAPIView(generics.ListAPIView):
             data=serializer.data,
             status_code=status.HTTP_200_OK,
         )
-    
+
     def get_paginated_response(self, data):
         """Override to use custom response format even with pagination."""
         return api_response(
             success=True,
             message="Your bikes fetched successfully",
             data={
-                'results': data,
-                'count': self.paginator.page.paginator.count,
-                'next': self.paginator.get_next_link(),
-                'previous': self.paginator.get_previous_link(),
+                "results": data,
+                "count": self.paginator.page.paginator.count,
+                "next": self.paginator.get_next_link(),
+                "previous": self.paginator.get_previous_link(),
             },
             status_code=status.HTTP_200_OK,
         )
@@ -206,6 +227,7 @@ class MyBikesAPIView(generics.ListAPIView):
 
 class MaintenanceTicketListCreateAPIView(generics.ListCreateAPIView):
     """List maintenance tickets or create a new one."""
+
     serializer_class = MaintenanceTicketSerializer
     permission_classes = [IsAuthenticated]
 
@@ -222,7 +244,7 @@ class MaintenanceTicketListCreateAPIView(generics.ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         """Override list method to use custom response format."""
         queryset = self.filter_queryset(self.get_queryset())
-        
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -242,10 +264,10 @@ class MaintenanceTicketListCreateAPIView(generics.ListCreateAPIView):
             success=True,
             message="Maintenance tickets fetched successfully",
             data={
-                'results': data,
-                'count': self.paginator.page.paginator.count,
-                'next': self.paginator.get_next_link(),
-                'previous': self.paginator.get_previous_link(),
+                "results": data,
+                "count": self.paginator.page.paginator.count,
+                "next": self.paginator.get_next_link(),
+                "previous": self.paginator.get_previous_link(),
             },
             status_code=status.HTTP_200_OK,
         )
@@ -263,7 +285,7 @@ class MaintenanceTicketListCreateAPIView(generics.ListCreateAPIView):
         )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def toggle_bike_status_api_view(request, pk):
     """Toggle bike status between available and unavailable."""
@@ -277,11 +299,11 @@ def toggle_bike_status_api_view(request, pk):
             status_code=status.HTTP_404_NOT_FOUND,
         )
 
-    if bike.status == 'available':
-        bike.status = 'unavailable'
+    if bike.status == "available":
+        bike.status = "unavailable"
         message = "Bike status changed to unavailable"
-    elif bike.status == 'unavailable':
-        bike.status = 'available'
+    elif bike.status == "unavailable":
+        bike.status = "available"
         message = "Bike status changed to available"
     else:
         return api_response(
@@ -290,9 +312,9 @@ def toggle_bike_status_api_view(request, pk):
             data=None,
             status_code=status.HTTP_400_BAD_REQUEST,
         )
-    
+
     bike.save()
-    serializer = BikeSerializer(bike, context={'request': request})
+    serializer = BikeSerializer(bike, context={"request": request})
     return api_response(
         success=True,
         message=message,
@@ -303,26 +325,29 @@ def toggle_bike_status_api_view(request, pk):
 
 class BikeImageListCreateAPIView(generics.ListCreateAPIView):
     """List or create bike images."""
+
     serializer_class = BikeImageSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        bike_id = self.kwargs['bike_id']
+        bike_id = self.kwargs["bike_id"]
         return BikeImage.objects.filter(bike_id=bike_id, bike__owner=self.request.user)
 
     def perform_create(self, serializer):
-        bike_id = self.kwargs['bike_id']
+        bike_id = self.kwargs["bike_id"]
         try:
             bike = Bike.objects.get(id=bike_id, owner=self.request.user)
         except Bike.DoesNotExist:
-            raise serializers.ValidationError("Bike not found or you don't own this bike.")
-        
+            raise serializers.ValidationError(
+                "Bike not found or you don't own this bike."
+            )
+
         serializer.save(bike=bike)
 
     def list(self, request, *args, **kwargs):
         """Override list method to use custom response format."""
         queryset = self.filter_queryset(self.get_queryset())
-        
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -342,10 +367,10 @@ class BikeImageListCreateAPIView(generics.ListCreateAPIView):
             success=True,
             message="Bike images fetched successfully",
             data={
-                'results': data,
-                'count': self.paginator.page.paginator.count,
-                'next': self.paginator.get_next_link(),
-                'previous': self.paginator.get_previous_link(),
+                "results": data,
+                "count": self.paginator.page.paginator.count,
+                "next": self.paginator.get_next_link(),
+                "previous": self.paginator.get_previous_link(),
             },
             status_code=status.HTTP_200_OK,
         )
@@ -365,6 +390,7 @@ class BikeImageListCreateAPIView(generics.ListCreateAPIView):
 
 class BikeImageDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update or delete a bike image."""
+
     serializer_class = BikeImageSerializer
     permission_classes = [IsAuthenticated]
 
@@ -384,12 +410,12 @@ class BikeImageDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         """Override update method to use custom response format."""
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        
+
         return api_response(
             success=True,
             message="Bike image updated successfully",
@@ -409,7 +435,7 @@ class BikeImageDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def set_primary_image_api_view(request, bike_id, image_id):
     """Set an image as the primary image for a bike."""
@@ -426,12 +452,12 @@ def set_primary_image_api_view(request, bike_id, image_id):
 
     # Remove primary status from other images
     BikeImage.objects.filter(bike=bike).update(is_primary=False)
-    
+
     # Set this image as primary
     image.is_primary = True
     image.save()
-    
-    serializer = BikeImageSerializer(image, context={'request': request})
+
+    serializer = BikeImageSerializer(image, context={"request": request})
     return api_response(
         success=True,
         message="Image set as primary successfully",

@@ -4,10 +4,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from utils.response import api_response
+from utils.authentication import OptionalJWTAuthentication
 from .serializers import SignupSerializer, UserSerializer
 
 
 class SignupAPIView(APIView):
+    authentication_classes = [OptionalJWTAuthentication]
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -29,6 +31,7 @@ class SignupAPIView(APIView):
 
 
 class LoginAPIView(TokenObtainPairView):
+    authentication_classes = [OptionalJWTAuthentication]
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -51,6 +54,7 @@ class LoginAPIView(TokenObtainPairView):
 
 
 class TokenRefreshAPIView(TokenRefreshView):
+    authentication_classes = [OptionalJWTAuthentication]
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):

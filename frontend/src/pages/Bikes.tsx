@@ -63,19 +63,19 @@ const Bikes = () => {
     ];
 
     // Transform bikes for BikeCard component
-    const bikes = bikeResponse?.data.results || [];
-    const totalCount = bikeResponse?.data.count || 0;
+    const bikes = bikeResponse?.data?.results || [];
+    const totalCount = bikeResponse?.data?.count || 0;
 
     const transformedBikes = bikes.map((bike) => ({
         id: bike.id.toString(),
         title: bike.title,
         location: bike.location,
         price: bike.daily_rate,
-        rating: 4.5, // Default rating - you might want to add this to your backend
-        reviews: 0, // Default reviews - you might want to add this to your backend
+        rating: 4.5,
+        reviews: 0,
         images: bike.images.length > 0 ? bike.images.map((img) => img.image_url) : ['/placeholder.svg'],
         batteryRange: bike.battery_range,
-        type: bike.bike_type,
+        type: bike.bike_type as BikeType,
         available: bike.status === 'available',
     }));
 

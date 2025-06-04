@@ -33,12 +33,18 @@ class Bike(BaseModel):
     title = models.CharField(max_length=100)
     description = models.TextField()
     location = models.CharField(max_length=255)
-    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    hourly_rate = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
     daily_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    bike_type = models.CharField(max_length=20, choices=BikeType.choices, default=BikeType.CITY)
+    bike_type = models.CharField(
+        max_length=20, choices=BikeType.choices, default=BikeType.CITY
+    )
     battery_range = models.PositiveIntegerField(help_text="Battery range in kilometers")
     max_speed = models.PositiveIntegerField(help_text="Maximum speed in km/h")
-    weight = models.DecimalField(max_digits=5, decimal_places=2, help_text="Weight in kilograms")
+    weight = models.DecimalField(
+        max_digits=5, decimal_places=2, help_text="Weight in kilograms"
+    )
     features = models.JSONField(default=list, blank=True)
     status = models.CharField(
         max_length=20, choices=BikeStatus.choices, default=BikeStatus.AVAILABLE
@@ -56,10 +62,16 @@ class BikeImage(BaseModel):
 
     bike = models.ForeignKey(Bike, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="bike_images/")
-    alt_text = models.CharField(max_length=255, blank=True, help_text="Alternative text for accessibility")
+    alt_text = models.CharField(
+        max_length=255, blank=True, help_text="Alternative text for accessibility"
+    )
     caption = models.CharField(max_length=255, blank=True, help_text="Image caption")
-    is_primary = models.BooleanField(default=False, help_text="Is this the primary/featured image")
-    order = models.PositiveIntegerField(default=0, help_text="Display order of the image")
+    is_primary = models.BooleanField(
+        default=False, help_text="Is this the primary/featured image"
+    )
+    order = models.PositiveIntegerField(
+        default=0, help_text="Display order of the image"
+    )
 
     class Meta:
         ordering = ["-is_primary", "order", "created_at"]
@@ -71,7 +83,9 @@ class BikeImage(BaseModel):
     def save(self, *args, **kwargs):
         # Ensure only one primary image per bike
         if self.is_primary:
-            BikeImage.objects.filter(bike=self.bike, is_primary=True).update(is_primary=False)
+            BikeImage.objects.filter(bike=self.bike, is_primary=True).update(
+                is_primary=False
+            )
         super().save(*args, **kwargs)
 
 
