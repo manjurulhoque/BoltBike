@@ -14,45 +14,78 @@ import {
     Wifi,
     ChevronLeft,
     ChevronRight,
+    Loader,
+    Copy,
+    Facebook,
+    Twitter,
+    Mail,
+    X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Header from '@/components/Header';
 import BookingProcess from '@/components/BookingProcess';
-import ReviewForm from '@/components/ReviewForm';
+import { useBike } from '@/hooks/useBikes';
+import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
+import { getBikeTypeLabel } from '@/lib/constants/bike';
+import { toast } from 'sonner';
 
 const BikeDetails = () => {
     const { id } = useParams();
+    const bikeId = parseInt(id || '0');
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
     const [guests, setGuests] = useState(1);
     const [showBookingProcess, setShowBookingProcess] = useState(false);
-    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
-    // Sample bike data - in a real app, this would come from an API
-    const bike = {
-        id: '1',
-        title: 'Trek Verve+ 2 Electric Hybrid',
-        type: 'City',
-        location: 'Downtown, San Francisco',
-        price: 45,
-        rating: 4.9,
-        reviews: 127,
-        host: 'Sarah Johnson',
-        hostImage: '/placeholder.svg',
-        images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-        batteryRange: 80,
-        maxSpeed: 32,
-        weight: 22,
-        features: ['GPS Tracking', 'Phone Charging', 'LED Lights', 'Basket Included', 'Helmet Provided'],
-        description:
-            "Perfect for city commuting and leisure rides. This premium electric bike offers a smooth, comfortable ride with excellent battery life. Ideal for exploring San Francisco's hills and neighborhoods.",
-        amenities: ['Free cancellation', 'Instant booking', '24/7 support', 'Insurance included'],
-    };
+    // Fetch bike data from API
+    const { data: bikeResponse, isLoading, error } = useBike(bikeId);
+    const bike = bikeResponse?.data;
+
+    // Fetch favorite status
+    const { data: favoriteResponse } = useIsFavorite(bikeId);
+    const isFavorite = favoriteResponse?.data?.is_favorite || false;
+
+    // Toggle favorite mutation
+    const toggleFavoriteMutation = useToggleFavorite();
+
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-white">
+                <Header />
+                <div className="flex items-center justify-center min-h-96">
+                    <Loader className="h-8 w-8 animate-spin text-rose-500" />
+                </div>
+            </div>
+        );
+    }
+
+    // Show error state
+    if (error || !bike) {
+        return (
+            <div className="min-h-screen bg-white">
+                <Header />
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="text-center py-12">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Bike not found</h2>
+                        <p className="text-gray-600 mb-6">
+                            The bike you're looking for doesn't exist or has been removed.
+                        </p>
+                        <Link to="/bikes">
+                            <Button className="bg-rose-500 hover:bg-rose-600">Browse All Bikes</Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev + 1) % bike.images.length);
@@ -62,35 +95,41 @@ const BikeDetails = () => {
         setCurrentImageIndex((prev) => (prev - 1 + bike.images.length) % bike.images.length);
     };
 
-    const reviews = [
-        {
-            id: 1,
-            name: 'Mike Chen',
-            avatar: '/placeholder.svg',
-            rating: 5,
-            date: '2 weeks ago',
-            comment:
-                'Amazing bike! Perfect for exploring the city. The battery lasted the entire day and the ride was incredibly smooth.',
-        },
-        {
-            id: 2,
-            name: 'Emma Wilson',
-            avatar: '/placeholder.svg',
-            rating: 5,
-            date: '1 month ago',
-            comment:
-                'Sarah was a great host and the bike was in perfect condition. Highly recommend for anyone visiting SF!',
-        },
-        {
-            id: 3,
-            name: 'David Rodriguez',
-            avatar: '/placeholder.svg',
-            rating: 4,
-            date: '2 months ago',
-            comment:
-                'Good bike overall. The GPS tracking feature was really helpful. Only minor issue was the seat could be more comfortable.',
-        },
-    ];
+    // Handle sharing functionality
+    const handleShare = (method: string) => {
+        const url = window.location.href;
+        const text = `Check out this amazing e-bike: ${bike.title}`;
+
+        switch (method) {
+            case 'copy':
+                navigator.clipboard.writeText(url);
+                toast.success('Link copied to clipboard!');
+                break;
+            case 'facebook':
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+                break;
+            case 'twitter':
+                window.open(
+                    `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+                    '_blank',
+                );
+                break;
+            case 'email':
+                window.open(`mailto:?subject=${encodeURIComponent(text)}&body=${encodeURIComponent(url)}`, '_blank');
+                break;
+        }
+        setShowShareModal(false);
+    };
+
+    // Set default values for missing properties
+    const rating = 4.5; // Default rating
+    const reviewsCount = 0; // Default reviews count
+    const hostName =
+        bike.owner?.first_name && bike.owner?.last_name
+            ? `${bike.owner.first_name} ${bike.owner.last_name}`
+            : 'Bike Owner';
+    const hostImage = '/placeholder.svg'; // Default placeholder
+    const pricePerDay = bike.daily_rate || 45; // Use daily_rate from API
 
     return (
         <div className="min-h-screen bg-white">
@@ -98,7 +137,7 @@ const BikeDetails = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {/* Back Button */}
-                <Link to="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
+                <Link to="/bikes" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to search
                 </Link>
@@ -107,11 +146,11 @@ const BikeDetails = () => {
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
-                            <Badge className="bg-rose-500">{bike.type}</Badge>
+                            <Badge className="bg-rose-500">{getBikeTypeLabel(bike.bike_type)}</Badge>
                             <div className="flex items-center">
                                 <Star className="h-4 w-4 fill-current text-yellow-400" />
-                                <span className="ml-1 font-medium">{bike.rating}</span>
-                                <span className="text-gray-600 ml-1">({bike.reviews} reviews)</span>
+                                <span className="ml-1 font-medium">{rating}</span>
+                                <span className="text-gray-600 ml-1">({reviewsCount} reviews)</span>
                             </div>
                         </div>
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">{bike.title}</h1>
@@ -121,13 +160,18 @@ const BikeDetails = () => {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => setShowShareModal(true)}>
                             <Share2 className="h-4 w-4 mr-2" />
                             Share
                         </Button>
-                        <Button variant="ghost" size="sm">
-                            <Heart className="h-4 w-4 mr-2" />
-                            Save
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleFavoriteMutation.mutate(bikeId)}
+                            disabled={toggleFavoriteMutation.isPending}
+                        >
+                            <Heart className={`h-4 w-4 mr-2 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                            {isFavorite ? 'Saved' : 'Save'}
                         </Button>
                     </div>
                 </div>
@@ -138,46 +182,54 @@ const BikeDetails = () => {
                         {/* Image Gallery */}
                         <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-8 bg-gray-100">
                             <img
-                                src={bike.images[currentImageIndex]}
+                                src={
+                                    bike.images.length > 0
+                                        ? bike.images[currentImageIndex].image_url
+                                        : '/placeholder.svg'
+                                }
                                 alt={bike.title}
                                 className="w-full h-full object-cover"
                             />
-                            <button
-                                onClick={prevImage}
-                                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2"
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
-                            <button
-                                onClick={nextImage}
-                                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2"
-                            >
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                                {bike.images.map((_, index) => (
+                            {bike.images.length > 1 && (
+                                <>
                                     <button
-                                        key={index}
-                                        onClick={() => setCurrentImageIndex(index)}
-                                        className={`w-2 h-2 rounded-full ${
-                                            index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                                        }`}
-                                    />
-                                ))}
-                            </div>
+                                        onClick={prevImage}
+                                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2"
+                                    >
+                                        <ChevronLeft className="h-5 w-5" />
+                                    </button>
+                                    <button
+                                        onClick={nextImage}
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2"
+                                    >
+                                        <ChevronRight className="h-5 w-5" />
+                                    </button>
+                                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                                        {bike.images.map((_, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => setCurrentImageIndex(index)}
+                                                className={`w-2 h-2 rounded-full ${
+                                                    index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {/* Host Info */}
                         <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg mb-8">
                             <div className="flex items-center">
                                 <img
-                                    src={bike.hostImage}
-                                    alt={bike.host}
+                                    src={hostImage}
+                                    alt={hostName}
                                     className="w-12 h-12 rounded-full object-cover mr-4"
                                 />
                                 <div>
-                                    <h3 className="font-semibold">Hosted by {bike.host}</h3>
-                                    <p className="text-sm text-gray-600">Superhost • 5 years hosting</p>
+                                    <h3 className="font-semibold">Hosted by {hostName}</h3>
+                                    <p className="text-sm text-gray-600">Bike Owner • Member since 2024</p>
                                 </div>
                             </div>
                             <Button variant="outline">Contact Host</Button>
@@ -186,21 +238,24 @@ const BikeDetails = () => {
                         {/* Description */}
                         <div className="mb-8">
                             <h2 className="text-2xl font-bold mb-4">About this e-bike</h2>
-                            <p className="text-gray-700 leading-relaxed">{bike.description}</p>
+                            <p className="text-gray-700 leading-relaxed">
+                                {bike.description ||
+                                    'This premium electric bike offers a smooth, comfortable ride with excellent battery life. Perfect for city commuting and leisure rides.'}
+                            </p>
                         </div>
 
                         {/* Specifications */}
                         <div className="mb-8">
                             <h2 className="text-2xl font-bold mb-4">Specifications</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 MD:grid-cols-4 gap-4">
                                 <div className="text-center p-4 border border-gray-200 rounded-lg">
                                     <Battery className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                                    <p className="font-semibold">{bike.batteryRange}km</p>
+                                    <p className="font-semibold">{bike.battery_range}km</p>
                                     <p className="text-sm text-gray-600">Range</p>
                                 </div>
                                 <div className="text-center p-4 border border-gray-200 rounded-lg">
                                     <Clock className="h-6 w-6 mx-auto mb-2 text-blue-600" />
-                                    <p className="font-semibold">{bike.maxSpeed}km/h</p>
+                                    <p className="font-semibold">{bike.max_speed}km/h</p>
                                     <p className="text-sm text-gray-600">Max Speed</p>
                                 </div>
                                 <div className="text-center p-4 border border-gray-200 rounded-lg">
@@ -220,30 +275,26 @@ const BikeDetails = () => {
                         <div className="mb-8">
                             <h2 className="text-2xl font-bold mb-4">What's included</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {bike.features.map((feature, index) => (
-                                    <div key={index} className="flex items-center">
-                                        <Wifi className="h-5 w-5 mr-3 text-green-600" />
-                                        <span>{feature}</span>
-                                    </div>
-                                ))}
+                                {bike.features && bike.features.length > 0 ? (
+                                    bike.features.map((feature: string, index: number) => (
+                                        <div key={index} className="flex items-center">
+                                            <Wifi className="h-5 w-5 mr-3 text-green-600" />
+                                            <span>{feature}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <>
+                                        <div className="flex items-center">
+                                            <Shield className="h-5 w-5 mr-3 text-green-600" />
+                                            <span>Helmet Included</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <Battery className="h-5 w-5 mr-3 text-green-600" />
+                                            <span>Charger Provided</span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                        </div>
-
-                        {/* Reviews */}
-                        <div className="mb-8">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-2xl font-bold flex items-center">
-                                    <Star className="h-6 w-6 inline mr-2" />
-                                    {bike.rating} • {bike.reviews} reviews
-                                </h2>
-                                <Button variant="outline" onClick={() => setShowReviewForm(true)}>
-                                    Write a Review
-                                </Button>
-                            </div>
-                            {/* ... keep existing code (reviews display) */}
-                            <Button variant="outline" className="mt-4">
-                                Show all reviews
-                            </Button>
                         </div>
                     </div>
 
@@ -253,12 +304,12 @@ const BikeDetails = () => {
                             <CardContent className="p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
-                                        <span className="text-2xl font-bold">${bike.price}</span>
+                                        <span className="text-2xl font-bold">${pricePerDay}</span>
                                         <span className="text-gray-600"> / day</span>
                                     </div>
                                     <div className="flex items-center">
                                         <Star className="h-4 w-4 fill-current text-yellow-400" />
-                                        <span className="ml-1 font-medium">{bike.rating}</span>
+                                        <span className="ml-1 font-medium">{rating}</span>
                                     </div>
                                 </div>
 
@@ -311,8 +362,8 @@ const BikeDetails = () => {
 
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
-                                        <span>${bike.price} x 3 days</span>
-                                        <span>${bike.price * 3}</span>
+                                        <span>${pricePerDay} x 3 days</span>
+                                        <span>${pricePerDay * 3}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span>Service fee</span>
@@ -321,17 +372,23 @@ const BikeDetails = () => {
                                     <hr className="my-2" />
                                     <div className="flex justify-between font-semibold">
                                         <span>Total</span>
-                                        <span>${bike.price * 3 + 15}</span>
+                                        <span>${pricePerDay * 3 + 15}</span>
                                     </div>
                                 </div>
 
                                 <div className="mt-6 space-y-2">
-                                    {bike.amenities.map((amenity, index) => (
-                                        <div key={index} className="flex items-center text-sm text-gray-600">
-                                            <Shield className="h-4 w-4 mr-2 text-green-600" />
-                                            <span>{amenity}</span>
-                                        </div>
-                                    ))}
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <Shield className="h-4 w-4 mr-2 text-green-600" />
+                                        <span>Free cancellation</span>
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <Clock className="h-4 w-4 mr-2 text-green-600" />
+                                        <span>Instant booking</span>
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <Shield className="h-4 w-4 mr-2 text-green-600" />
+                                        <span>Insurance included</span>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -339,25 +396,56 @@ const BikeDetails = () => {
                 </div>
             </div>
 
+            {/* Share Modal */}
+            <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Share this bike</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => handleShare('copy')}
+                            className="flex items-center justify-center gap-2"
+                        >
+                            <Copy className="h-4 w-4" />
+                            Copy Link
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => handleShare('facebook')}
+                            className="flex items-center justify-center gap-2"
+                        >
+                            <Facebook className="h-4 w-4" />
+                            Facebook
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => handleShare('twitter')}
+                            className="flex items-center justify-center gap-2"
+                        >
+                            <Twitter className="h-4 w-4" />
+                            Twitter
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => handleShare('email')}
+                            className="flex items-center justify-center gap-2"
+                        >
+                            <Mail className="h-4 w-4" />
+                            Email
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {/* Booking Process Modal */}
             {showBookingProcess && (
                 <BookingProcess
-                    bikeId={bike.id}
+                    bikeId={String(bike.id)}
                     bikeTitle={bike.title}
-                    pricePerDay={bike.price}
+                    pricePerDay={pricePerDay}
                     onClose={() => setShowBookingProcess(false)}
-                />
-            )}
-
-            {/* Review Form Modal */}
-            {showReviewForm && (
-                <ReviewForm
-                    bikeId={bike.id}
-                    bikeTitle={bike.title}
-                    onClose={() => setShowReviewForm(false)}
-                    onReviewSubmitted={() => {
-                        // Refresh reviews or update state
-                    }}
                 />
             )}
         </div>

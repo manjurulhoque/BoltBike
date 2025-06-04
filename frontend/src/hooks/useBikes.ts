@@ -12,7 +12,7 @@ const getAuthToken = (): string | null => {
 };
 
 // Base fetch function with authentication
-const apiRequest = async <T = any>(url: string, options: RequestInit = {}): Promise<T> => {
+export const apiRequest = async <T = any>(url: string, options: RequestInit = {}): Promise<T> => {
     const token = getAuthToken();
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',

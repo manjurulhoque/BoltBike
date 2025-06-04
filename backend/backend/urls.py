@@ -28,6 +28,7 @@ urlpatterns = [
             [
                 path("users/", include("users.urls")),
                 path("bikes/", include("bikes.urls")),
+                path("favorites/", include("favorites.urls")),
             ]
         ),
     ),
