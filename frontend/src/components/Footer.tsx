@@ -1,5 +1,6 @@
 import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
     return (
@@ -34,24 +35,24 @@ const Footer = () => {
                         <h4 className="font-semibold text-gray-900 mb-4">For Riders</h4>
                         <ul className="space-y-2 text-gray-600">
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/how-it-works" className="hover:text-rose-500">
                                     How it works
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/safety" className="hover:text-rose-500">
                                     Safety
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/safety" className="hover:text-rose-500">
                                     Insurance
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/support" className="hover:text-rose-500">
                                     Support
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
@@ -61,24 +62,24 @@ const Footer = () => {
                         <h4 className="font-semibold text-gray-900 mb-4">For Hosts</h4>
                         <ul className="space-y-2 text-gray-600">
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/list-bike" className="hover:text-rose-500">
                                     Rent your bike
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/safety" className="hover:text-rose-500">
                                     Host protection
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/support" className="hover:text-rose-500">
                                     Resources
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/support" className="hover:text-rose-500">
                                     Community
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
@@ -88,41 +89,41 @@ const Footer = () => {
                         <h4 className="font-semibold text-gray-900 mb-4">Company</h4>
                         <ul className="space-y-2 text-gray-600">
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/about" className="hover:text-rose-500">
                                     About
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/about" className="hover:text-rose-500">
                                     Careers
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/about" className="hover:text-rose-500">
                                     Press
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-rose-500">
+                                <Link to="/contact" className="hover:text-rose-500">
                                     Contact
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
                 </div>
 
                 <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p className="text-gray-600 text-sm">© 2024 eBikeRent. All rights reserved.</p>
+                    <p className="text-gray-600 text-sm">© 2025 eBikeRent. All rights reserved.</p>
                     <div className="flex space-x-6 text-sm text-gray-600 mt-4 md:mt-0">
-                        <a href="#" className="hover:text-rose-500">
+                        <Link to="/privacy-policy" className="hover:text-rose-500">
                             Privacy Policy
-                        </a>
-                        <a href="#" className="hover:text-rose-500">
+                        </Link>
+                        <Link to="/terms-of-service" className="hover:text-rose-500">
                             Terms of Service
-                        </a>
-                        <a href="#" className="hover:text-rose-500">
+                        </Link>
+                        <Link to="/privacy-policy" className="hover:text-rose-500">
                             Cookie Policy
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </div>

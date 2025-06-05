@@ -12,6 +12,13 @@ import MyBikes from './pages/MyBikes';
 import Map from './pages/Map';
 import NotFound from './pages/NotFound';
 import Index from './pages/Index';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import HowItWorks from './pages/HowItWorks';
+import Safety from './pages/Safety';
+import Support from './pages/Support';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const queryClient = new QueryClient({
@@ -35,6 +42,13 @@ function App() {
                     <Route path="/bikes" element={<Bikes />} />
                     <Route path="/bikes/:id" element={<BikeDetails />} />
                     <Route path="/map" element={<Map />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/how-it-works" element={<HowItWorks />} />
+                    <Route path="/safety" element={<Safety />} />
+                    <Route path="/support" element={<Support />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms-of-service" element={<TermsOfService />} />
                     <Route
                         path="/dashboard"
                         element={
