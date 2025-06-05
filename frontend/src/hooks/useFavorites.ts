@@ -53,7 +53,7 @@ export const useAddFavorite = () => {
             });
         },
         onError: (error: any) => {
-            toast.error(error.message || 'Failed to add to favorites');
+            toast.error('Failed to add to favorites');
         },
     });
 };
@@ -77,7 +77,7 @@ export const useRemoveFavorite = () => {
             queryClient.setQueryData(['favorite-status', bikeId], { success: true, data: { is_favorite: false } });
         },
         onError: (error: any) => {
-            toast.error(error.message || 'Failed to remove from favorites');
+            toast.error('Failed to remove from favorites');
         },
     });
 };
@@ -105,7 +105,7 @@ export const useToggleFavorite = () => {
             });
         },
         onError: (error: any) => {
-            toast.error(error.message || 'Failed to update favorites');
+            toast.error('Failed to update favorites');
         },
     });
 };

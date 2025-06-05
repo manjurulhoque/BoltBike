@@ -14,13 +14,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import BikeCard from '@/components/BikeCard';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import BikeMap from '@/components/BikeMap';
+import PaginationControls from '@/components/PaginationControls';
 import { BikeType, BikeFilters, Bike } from '@/lib/types/bike';
 import { useBikes } from '@/hooks/useBikes';
 import { BIKE_TYPES_WITH_ALL } from '@/lib/constants/bike';
 
 const Bikes = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
+    const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
         search: '',
         type: '',
@@ -29,6 +32,9 @@ const Bikes = () => {
         location: '',
         sortBy: 'relevance',
     });
+
+    const itemsPerPage = 8; // Number of bikes per page
+
     // Build API filters from UI filters
     const apiFilters: BikeFilters = {
         ...(filters.search && { search: filters.search }),
@@ -36,6 +42,8 @@ const Bikes = () => {
         ...(filters.location && filters.location !== 'All Locations' && { location: filters.location }),
         min_price: filters.priceRange[0],
         max_price: filters.priceRange[1],
+        page: currentPage,
+        page_size: itemsPerPage,
         // Set ordering based on sortBy
         ordering: (() => {
             switch (filters.sortBy) {
@@ -65,6 +73,18 @@ const Bikes = () => {
     // Transform bikes for BikeCard component
     const bikes = bikeResponse?.data?.results || [];
     const totalCount = bikeResponse?.data?.count || 0;
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    // Handle filter changes - reset to page 1
+    const handleFilterChange = (newFilters: Partial<typeof filters>) => {
+        setFilters((prev) => ({ ...prev, ...newFilters }));
+        setCurrentPage(1);
+    };
+
+    // Handle page changes
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -81,16 +101,13 @@ const Bikes = () => {
                                 placeholder="Search e-bikes..."
                                 className="pl-10"
                                 value={filters.search}
-                                onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                                onChange={(e) => handleFilterChange({ search: e.target.value })}
                             />
                         </div>
 
                         {/* Filters */}
                         <div className="flex items-center space-x-2">
-                            <Select
-                                value={filters.type}
-                                onValueChange={(value) => setFilters((prev) => ({ ...prev, type: value }))}
-                            >
+                            <Select value={filters.type} onValueChange={(value) => handleFilterChange({ type: value })}>
                                 <SelectTrigger className="w-40">
                                     <SelectValue placeholder="Bike Type" />
                                 </SelectTrigger>
@@ -105,7 +122,7 @@ const Bikes = () => {
 
                             <Select
                                 value={filters.location}
-                                onValueChange={(value) => setFilters((prev) => ({ ...prev, location: value }))}
+                                onValueChange={(value) => handleFilterChange({ location: value })}
                             >
                                 <SelectTrigger className="w-40">
                                     <SelectValue placeholder="Location" />
@@ -131,9 +148,7 @@ const Bikes = () => {
                                     <div className="px-3 py-4">
                                         <Slider
                                             value={filters.priceRange}
-                                            onValueChange={(value) =>
-                                                setFilters((prev) => ({ ...prev, priceRange: value }))
-                                            }
+                                            onValueChange={(value) => handleFilterChange({ priceRange: value })}
                                             max={200}
                                             min={10}
                                             step={5}
@@ -151,9 +166,7 @@ const Bikes = () => {
                                     <div className="px-3 py-4">
                                         <Slider
                                             value={filters.batteryRange}
-                                            onValueChange={(value) =>
-                                                setFilters((prev) => ({ ...prev, batteryRange: value }))
-                                            }
+                                            onValueChange={(value) => handleFilterChange({ batteryRange: value })}
                                             max={200}
                                             min={20}
                                             step={10}
@@ -169,7 +182,7 @@ const Bikes = () => {
 
                             <Select
                                 value={filters.sortBy}
-                                onValueChange={(value) => setFilters((prev) => ({ ...prev, sortBy: value }))}
+                                onValueChange={(value) => handleFilterChange({ sortBy: value })}
                             >
                                 <SelectTrigger className="w-40">
                                     <SelectValue />
@@ -219,7 +232,7 @@ const Bikes = () => {
                             <Badge variant="secondary" className="flex items-center">
                                 Search: {filters.search}
                                 <button
-                                    onClick={() => setFilters((prev) => ({ ...prev, search: '' }))}
+                                    onClick={() => handleFilterChange({ search: '' })}
                                     className="ml-2 hover:text-gray-700"
                                 >
                                     ×
@@ -230,7 +243,7 @@ const Bikes = () => {
                             <Badge variant="secondary" className="flex items-center">
                                 Type: {filters.type}
                                 <button
-                                    onClick={() => setFilters((prev) => ({ ...prev, type: '' }))}
+                                    onClick={() => handleFilterChange({ type: '' })}
                                     className="ml-2 hover:text-gray-700"
                                 >
                                     ×
@@ -246,7 +259,14 @@ const Bikes = () => {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">E-bikes for rent</h1>
-                        <p className="text-gray-600">{totalCount} bikes available</p>
+                        <p className="text-gray-600">
+                            {totalCount} bikes available
+                            {totalPages > 1 && (
+                                <span className="ml-2 text-sm">
+                                    • Page {currentPage} of {totalPages}
+                                </span>
+                            )}
+                        </p>
                     </div>
                 </div>
 
@@ -262,25 +282,38 @@ const Bikes = () => {
                 ) : viewMode === 'map' ? (
                     <BikeMap bikes={bikes} />
                 ) : (
-                    <div
-                        className={
-                            viewMode === 'grid'
-                                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                                : 'space-y-4'
-                        }
-                    >
-                        {bikes.length > 0 ? (
-                            bikes.map((bike) => (
-                                <BikeCard key={bike.id} bike={bike} />
-                            ))
-                        ) : (
-                            <div className="col-span-full text-center py-12">
-                                <p className="text-gray-500">No bikes found matching your criteria.</p>
+                    <>
+                        <div
+                            className={
+                                viewMode === 'grid'
+                                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                                    : 'space-y-4'
+                            }
+                        >
+                            {bikes.length > 0 ? (
+                                bikes.map((bike) => <BikeCard key={bike.id} bike={bike} />)
+                            ) : (
+                                <div className="col-span-full text-center py-12">
+                                    <p className="text-gray-500">No bikes found matching your criteria.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="mt-12 mb-8">
+                                <PaginationControls
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={handlePageChange}
+                                />
                             </div>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
+
+            <Footer />
         </div>
     );
 };

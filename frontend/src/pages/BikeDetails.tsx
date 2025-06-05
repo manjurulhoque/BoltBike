@@ -139,7 +139,7 @@ const BikeDetails = () => {
                 {/* Back Button */}
                 <Link to="/bikes" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to search
+                    Back to list
                 </Link>
 
                 {/* Title and Actions */}
