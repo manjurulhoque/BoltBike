@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Grid, List, Map as MapIcon, SlidersHorizontal, Search, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ import { useBikes } from '@/hooks/useBikes';
 import { BIKE_TYPES_WITH_ALL } from '@/lib/constants/bike';
 
 const Bikes = () => {
+    const [searchParams] = useSearchParams();
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
@@ -32,6 +34,20 @@ const Bikes = () => {
         location: '',
         sortBy: 'relevance',
     });
+
+    // Initialize filters from URL parameters
+    useEffect(() => {
+        const urlLocation = searchParams.get('location');
+        const urlStartDate = searchParams.get('startDate');
+        const urlEndDate = searchParams.get('endDate');
+
+        if (urlLocation || urlStartDate || urlEndDate) {
+            setFilters((prev) => ({
+                ...prev,
+                ...(urlLocation && { search: urlLocation, location: urlLocation }),
+            }));
+        }
+    }, [searchParams]);
 
     const itemsPerPage = 8; // Number of bikes per page
 

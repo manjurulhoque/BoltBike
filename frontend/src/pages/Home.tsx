@@ -4,7 +4,7 @@ import FilterBar from '@/components/FilterBar';
 import BikeGrid from '@/components/BikeGrid';
 import Footer from '@/components/Footer';
 
-const Index = () => {
+const Home = () => {
     return (
         <div className="min-h-screen bg-white">
             <Header />
@@ -16,4 +16,4 @@ const Index = () => {
     );
 };
 
-export default Index;
+export default Home;

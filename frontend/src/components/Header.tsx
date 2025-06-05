@@ -1,11 +1,25 @@
-import { Search, Menu, User, Heart, Globe, Map } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Search, Menu, User, Heart, Globe, Map, Calendar } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useUser, useLogout } from '@/hooks/auth/useAuth';
+import { useSearch } from '@/contexts/SearchContext';
 
 const Header = () => {
     const { data: user, isLoading } = useUser();
     const logout = useLogout();
+    const navigate = useNavigate();
+    const { searchState, updateSearchState } = useSearch();
+
+    const handleSearch = () => {
+        // Navigate to bikes page with search parameters
+        const params = new URLSearchParams();
+        if (searchState.location) params.set('location', searchState.location);
+        if (searchState.startDate) params.set('startDate', searchState.startDate);
+        if (searchState.endDate) params.set('endDate', searchState.endDate);
+
+        navigate(`/bikes?${params.toString()}`);
+    };
 
     return (
         <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
@@ -27,32 +41,42 @@ const Header = () => {
                                     type="text"
                                     placeholder="Search destinations"
                                     className="block w-32 text-sm border-0 p-0 placeholder-gray-500 focus:ring-0 focus:outline-none"
+                                    value={searchState.location}
+                                    onChange={(e) => updateSearchState({ location: e.target.value })}
                                 />
                             </div>
                             <div className="border-l border-gray-300 h-6"></div>
                             <div className="px-3 py-1">
                                 <span className="text-sm font-medium">Check in</span>
                                 <input
-                                    type="text"
+                                    type="date"
                                     placeholder="Add dates"
-                                    className="block w-24 text-sm border-0 p-0 placeholder-gray-500 focus:ring-0 focus:outline-none"
+                                    className="block w-28 text-sm border-0 p-0 placeholder-gray-500 focus:ring-0 focus:outline-none text-gray-700"
+                                    value={searchState.startDate}
+                                    onChange={(e) => updateSearchState({ startDate: e.target.value })}
+                                    min={new Date().toISOString().split('T')[0]}
                                 />
                             </div>
                             <div className="border-l border-gray-300 h-6"></div>
                             <div className="px-3 py-1">
                                 <span className="text-sm font-medium">Check out</span>
                                 <input
-                                    type="text"
+                                    type="date"
                                     placeholder="Add dates"
-                                    className="block w-24 text-sm border-0 p-0 placeholder-gray-500 focus:ring-0 focus:outline-none"
+                                    className="block w-28 text-sm border-0 p-0 placeholder-gray-500 focus:ring-0 focus:outline-none text-gray-700"
+                                    value={searchState.endDate}
+                                    onChange={(e) => updateSearchState({ endDate: e.target.value })}
+                                    min={searchState.startDate || new Date().toISOString().split('T')[0]}
                                 />
                             </div>
                         </div>
-                        <Link to="/bikes">
-                            <Button size="sm" className="rounded-full bg-rose-500 hover:bg-rose-600 ml-2 p-2">
-                                <Search className="h-4 w-4" />
-                            </Button>
-                        </Link>
+                        <Button
+                            size="sm"
+                            className="rounded-full bg-rose-500 hover:bg-rose-600 ml-2 p-2"
+                            onClick={handleSearch}
+                        >
+                            <Search className="h-4 w-4" />
+                        </Button>
                     </div>
 
                     {/* Right Menu */}
