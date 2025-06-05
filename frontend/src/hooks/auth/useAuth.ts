@@ -3,8 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginCredentials, SignupCredentials, AuthResponse, User } from '@/lib/types/auth';
 import { APIResponse } from '@/lib/types/api';
 import { useAuthToken } from '../useAuthToken';
+import { API_BASE_URL } from '@/lib/utils/apiRequest';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1/users';
+const API_URL = `${API_BASE_URL}/users`;
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
@@ -97,9 +98,6 @@ export const useSignup = () => {
 // Get current user
 export const useUser = () => {
     const { hasToken, token } = useAuthToken();
-
-    // Debug logging (remove in production)
-    console.log('useUser - hasToken:', hasToken, 'token exists:', !!token);
 
     return useQuery({
         queryKey: ['user'], // Stable query key

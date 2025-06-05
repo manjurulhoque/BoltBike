@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from './useBikes';
+import { apiRequest } from '@/lib/utils/apiRequest';
 import type {
     APIResponse,
     Favorite,

@@ -2,11 +2,11 @@ import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import BikeCard from './BikeCard';
 import { Button } from './ui/button';
-import { useBikes } from '@/hooks/useBikes';
+import { useHomePageData } from '@/hooks/useCore';
 
 const BikeGrid = () => {
-    const { data: bikesResponse, isLoading, error } = useBikes();
-    const bikes = bikesResponse?.data?.results || [];
+    const { data: homePageData, isLoading, error } = useHomePageData();
+    const bikes = homePageData?.data?.bikes || [];
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

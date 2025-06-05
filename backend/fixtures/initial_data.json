@@ -1,0 +1,602 @@
+[
+  {
+    "model": "bikes.bike",
+    "pk": 4,
+    "fields": {
+      "owner": 2,
+      "title": "Cargo Master Pro",
+      "description": "Heavy-duty cargo e-bike perfect for deliveries and transporting goods. Spacious cargo area with excellent stability.",
+      "location": "Business District, San Francisco",
+      "hourly_rate": "20.00",
+      "daily_rate": "140.00",
+      "bike_type": "cargo",
+      "battery_range": 50,
+      "max_speed": 20,
+      "weight": "35.00",
+      "features": ["Large cargo box", "Reinforced frame", "Security lock", "Weather protection"],
+      "status": "available",
+      "created_at": "2024-01-20T15:30:00Z",
+      "updated_at": "2024-01-20T15:30:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 5,
+    "fields": {
+      "owner": 1,
+      "title": "Compact Folding Wonder",
+      "description": "Space-saving folding e-bike perfect for urban commuters with limited storage space. Easy to carry and store.",
+      "location": "University Campus, Boston",
+      "hourly_rate": "10.00",
+      "daily_rate": "60.00",
+      "bike_type": "folding",
+      "battery_range": 40,
+      "max_speed": 20,
+      "weight": "16.00",
+      "features": ["Quick-fold mechanism", "Lightweight design", "Compact storage", "Carry handle"],
+      "status": "available",
+      "created_at": "2024-01-15T12:00:00Z",
+      "updated_at": "2024-01-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 6,
+    "fields": {
+      "owner": 2,
+      "title": "Hybrid Adventure",
+      "description": "Versatile hybrid e-bike combining comfort and performance. Great for both city streets and light trails.",
+      "location": "Riverside Park, Portland",
+      "hourly_rate": "14.00",
+      "daily_rate": "85.00",
+      "bike_type": "hybrid",
+      "battery_range": 65,
+      "max_speed": 26,
+      "weight": "21.00",
+      "features": ["Comfort seat", "Adjustable handlebars", "Multi-terrain tires", "Built-in lock"],
+      "status": "available",
+      "created_at": "2024-01-20T16:00:00Z",
+      "updated_at": "2024-01-20T16:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 7,
+    "fields": {
+      "owner": 1,
+      "title": "City Cruiser Deluxe",
+      "description": "Comfortable city e-bike with premium features. Perfect for leisurely rides and daily commuting.",
+      "location": "Historic District, Charleston",
+      "hourly_rate": "13.00",
+      "daily_rate": "80.00",
+      "bike_type": "city",
+      "battery_range": 55,
+      "max_speed": 24,
+      "weight": "23.00",
+      "features": ["Comfort grips", "Step-through frame", "Basket included", "Bell and mirrors"],
+      "status": "available",
+      "created_at": "2024-01-15T13:00:00Z",
+      "updated_at": "2024-01-15T13:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 8,
+    "fields": {
+      "owner": 2,
+      "title": "Trail Blazer Supreme",
+      "description": "Professional-grade mountain e-bike with top-tier components. Built for serious mountain biking enthusiasts.",
+      "location": "Rocky Mountain National Park, Colorado",
+      "hourly_rate": "22.00",
+      "daily_rate": "150.00",
+      "bike_type": "mountain",
+      "battery_range": 90,
+      "max_speed": 30,
+      "weight": "28.00",
+      "features": ["Premium suspension", "Disc brakes", "Rock guards", "GPS navigation"],
+      "status": "available",
+      "created_at": "2024-01-20T16:30:00Z",
+      "updated_at": "2024-01-20T16:30:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 9,
+    "fields": {
+      "owner": 1,
+      "title": "Speed Demon Road",
+      "description": "High-performance road e-bike for competitive cyclists. Aerodynamic design with powerful motor assistance.",
+      "location": "Cycling Circuit, Austin",
+      "hourly_rate": "19.00",
+      "daily_rate": "125.00",
+      "bike_type": "road",
+      "battery_range": 75,
+      "max_speed": 35,
+      "weight": "17.50",
+      "features": ["Aerodynamic frame", "Racing wheels", "Power meter", "Heart rate monitor"],
+      "status": "available",
+      "created_at": "2024-01-15T14:00:00Z",
+      "updated_at": "2024-01-15T14:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 10,
+    "fields": {
+      "owner": 2,
+      "title": "Business Cargo Elite",
+      "description": "Premium cargo e-bike designed for commercial use. Exceptional load capacity with reliable performance.",
+      "location": "Industrial Zone, Seattle",
+      "hourly_rate": "25.00",
+      "daily_rate": "180.00",
+      "bike_type": "cargo",
+      "battery_range": 60,
+      "max_speed": 22,
+      "weight": "40.00",
+      "features": ["Extra large cargo area", "Hydraulic brakes", "Commercial-grade motor", "Fleet tracking"],
+      "status": "available",
+      "created_at": "2024-01-20T17:00:00Z",
+      "updated_at": "2024-01-20T17:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 11,
+    "fields": {
+      "owner": 1,
+      "title": "Portable City Folder",
+      "description": "Ultra-portable folding e-bike that fits in most car trunks. Perfect for multi-modal transportation.",
+      "location": "Metro Station, Washington DC",
+      "hourly_rate": "11.00",
+      "daily_rate": "65.00",
+      "bike_type": "folding",
+      "battery_range": 45,
+      "max_speed": 22,
+      "weight": "15.50",
+      "features": ["Ultra-compact fold", "Quick release wheels", "Travel bag included", "Airport friendly"],
+      "status": "available",
+      "created_at": "2024-01-15T15:00:00Z",
+      "updated_at": "2024-01-15T15:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 12,
+    "fields": {
+      "owner": 2,
+      "title": "All-Terrain Hybrid",
+      "description": "Rugged hybrid e-bike that handles any terrain with ease. Perfect balance of comfort and capability.",
+      "location": "State Park, Phoenix",
+      "hourly_rate": "16.00",
+      "daily_rate": "95.00",
+      "bike_type": "hybrid",
+      "battery_range": 70,
+      "max_speed": 27,
+      "weight": "22.00",
+      "features": ["All-weather tires", "Shock absorption", "Integrated lights", "Theft protection"],
+      "status": "available",
+      "created_at": "2024-01-20T17:30:00Z",
+      "updated_at": "2024-01-20T17:30:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 13,
+    "fields": {
+      "owner": 1,
+      "title": "Eco Commuter Green",
+      "description": "Environmentally-friendly city e-bike made from sustainable materials. Zero-emission transportation solution.",
+      "location": "Green District, Portland",
+      "hourly_rate": "12.00",
+      "daily_rate": "70.00",
+      "bike_type": "city",
+      "battery_range": 50,
+      "max_speed": 23,
+      "weight": "20.00",
+      "features": ["Eco-friendly materials", "Solar charging capability", "Recycled components", "Carbon neutral"],
+      "status": "available",
+      "created_at": "2024-01-15T16:00:00Z",
+      "updated_at": "2024-01-15T16:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 14,
+    "fields": {
+      "owner": 2,
+      "title": "Extreme Mountain Pro",
+      "description": "Extreme terrain mountain e-bike for the most challenging trails. Built to withstand the toughest conditions.",
+      "location": "Mountain Resort, Aspen",
+      "hourly_rate": "28.00",
+      "daily_rate": "200.00",
+      "bike_type": "mountain",
+      "battery_range": 85,
+      "max_speed": 32,
+      "weight": "30.00",
+      "features": ["Extreme suspension", "Reinforced frame", "All-weather design", "Emergency beacon"],
+      "status": "available",
+      "created_at": "2024-01-20T18:00:00Z",
+      "updated_at": "2024-01-20T18:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 15,
+    "fields": {
+      "owner": 1,
+      "title": "Lightning Road Racer",
+      "description": "Ultra-fast road e-bike for serious speed enthusiasts. Professional racing features with electric assistance.",
+      "location": "Racing Track, Indianapolis",
+      "hourly_rate": "24.00",
+      "daily_rate": "160.00",
+      "bike_type": "road",
+      "battery_range": 80,
+      "max_speed": 40,
+      "weight": "16.00",
+      "features": ["Racing geometry", "Wind-cutting design", "Premium components", "Data logging"],
+      "status": "available",
+      "created_at": "2024-01-15T17:00:00Z",
+      "updated_at": "2024-01-15T17:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 16,
+    "fields": {
+      "owner": 2,
+      "title": "Heavy Duty Cargo Max",
+      "description": "Maximum capacity cargo e-bike for industrial applications. Unmatched load-bearing capability.",
+      "location": "Warehouse District, Chicago",
+      "hourly_rate": "30.00",
+      "daily_rate": "220.00",
+      "bike_type": "cargo",
+      "battery_range": 45,
+      "max_speed": 18,
+      "weight": "45.00",
+      "features": ["Maximum load capacity", "Industrial-grade motor", "Reinforced wheels", "Load monitoring"],
+      "status": "available",
+      "created_at": "2024-01-20T18:30:00Z",
+      "updated_at": "2024-01-20T18:30:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 17,
+    "fields": {
+      "owner": 1,
+      "title": "Smart Fold Tech",
+      "description": "High-tech folding e-bike with smart features and app connectivity. The future of urban mobility.",
+      "location": "Tech Hub, San Jose",
+      "hourly_rate": "17.00",
+      "daily_rate": "110.00",
+      "bike_type": "folding",
+      "battery_range": 55,
+      "max_speed": 25,
+      "weight": "18.00",
+      "features": ["Smart connectivity", "App control", "GPS tracking", "Anti-theft alarm"],
+      "status": "available",
+      "created_at": "2024-01-15T18:00:00Z",
+      "updated_at": "2024-01-15T18:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 18,
+    "fields": {
+      "owner": 2,
+      "title": "Adventure Hybrid Max",
+      "description": "Maximum versatility hybrid e-bike for all types of adventures. From city to trail, this bike does it all.",
+      "location": "Adventure Park, Denver",
+      "hourly_rate": "18.00",
+      "daily_rate": "115.00",
+      "bike_type": "hybrid",
+      "battery_range": 75,
+      "max_speed": 29,
+      "weight": "24.00",
+      "features": ["Versatile design", "Quick tire change", "Adventure accessories", "Weather resistance"],
+      "status": "available",
+      "created_at": "2024-01-20T19:00:00Z",
+      "updated_at": "2024-01-20T19:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 19,
+    "fields": {
+      "owner": 1,
+      "title": "Classic City Charm",
+      "description": "Vintage-styled city e-bike with modern electric technology. Classic looks with contemporary performance.",
+      "location": "Historic Quarter, Savannah",
+      "hourly_rate": "14.00",
+      "daily_rate": "85.00",
+      "bike_type": "city",
+      "battery_range": 58,
+      "max_speed": 24,
+      "weight": "24.50",
+      "features": ["Vintage styling", "Leather accessories", "Classic bell", "Retro display"],
+      "status": "available",
+      "created_at": "2024-01-15T19:00:00Z",
+      "updated_at": "2024-01-15T19:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 20,
+    "fields": {
+      "owner": 2,
+      "title": "Wilderness Mountain Explorer",
+      "description": "Long-range mountain e-bike for extended wilderness adventures. Built for multi-day expeditions.",
+      "location": "National Forest, Montana",
+      "hourly_rate": "26.00",
+      "daily_rate": "175.00",
+      "bike_type": "mountain",
+      "battery_range": 100,
+      "max_speed": 28,
+      "weight": "27.00",
+      "features": ["Extended range battery", "Expedition gear mounts", "Satellite communication", "Emergency kit"],
+      "status": "available",
+      "created_at": "2024-01-20T19:30:00Z",
+      "updated_at": "2024-01-20T19:30:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 21,
+    "fields": {
+      "owner": 1,
+      "title": "Performance Road Elite",
+      "description": "Elite-level road e-bike for competitive training and racing. Professional-grade components throughout.",
+      "location": "Cycling Center, San Diego",
+      "hourly_rate": "21.00",
+      "daily_rate": "135.00",
+      "bike_type": "road",
+      "battery_range": 72,
+      "max_speed": 38,
+      "weight": "17.00",
+      "features": ["Elite components", "Training modes", "Performance analytics", "Professional fit"],
+      "status": "available",
+      "created_at": "2024-01-15T20:00:00Z",
+      "updated_at": "2024-01-15T20:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 22,
+    "fields": {
+      "owner": 2,
+      "title": "Urban Cargo Solutions",
+      "description": "Smart cargo e-bike designed for urban delivery services. Efficient, reliable, and environmentally friendly.",
+      "location": "Downtown Core, Miami",
+      "hourly_rate": "23.00",
+      "daily_rate": "155.00",
+      "bike_type": "cargo",
+      "battery_range": 65,
+      "max_speed": 24,
+      "weight": "32.00",
+      "features": ["Urban design", "Delivery optimization", "Route planning", "Customer notifications"],
+      "status": "available",
+      "created_at": "2024-01-20T20:00:00Z",
+      "updated_at": "2024-01-20T20:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 23,
+    "fields": {
+      "owner": 1,
+      "title": "Travel Companion Fold",
+      "description": "Travel-optimized folding e-bike perfect for vacations and business trips. Airline-approved and travel-ready.",
+      "location": "Airport District, Atlanta",
+      "hourly_rate": "15.00",
+      "daily_rate": "95.00",
+      "bike_type": "folding",
+      "battery_range": 48,
+      "max_speed": 23,
+      "weight": "17.50",
+      "features": ["Travel case included", "TSA approved", "Quick setup", "Vacation mode"],
+      "status": "available",
+      "created_at": "2024-01-15T21:00:00Z",
+      "updated_at": "2024-01-15T21:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 24,
+    "fields": {
+      "owner": 2,
+      "title": "Comfort Hybrid Cruiser",
+      "description": "Ultra-comfortable hybrid e-bike designed for long, leisurely rides. Maximum comfort without sacrificing performance.",
+      "location": "Beach Boardwalk, Santa Monica",
+      "hourly_rate": "16.00",
+      "daily_rate": "100.00",
+      "bike_type": "hybrid",
+      "battery_range": 68,
+      "max_speed": 26,
+      "weight": "23.50",
+      "features": ["Comfort plus seat", "Ergonomic design", "Smooth ride technology", "Relaxed geometry"],
+      "status": "available",
+      "created_at": "2024-01-20T20:30:00Z",
+      "updated_at": "2024-01-20T20:30:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 25,
+    "fields": {
+      "owner": 1,
+      "title": "Metro City Express",
+      "description": "Fast and efficient city e-bike designed for urban commuters who need to get places quickly.",
+      "location": "Financial District, New York",
+      "hourly_rate": "16.00",
+      "daily_rate": "100.00",
+      "bike_type": "city",
+      "battery_range": 62,
+      "max_speed": 28,
+      "weight": "21.50",
+      "features": ["Commuter optimization", "Fast charging", "Rush hour mode", "Traffic navigation"],
+      "status": "available",
+      "created_at": "2024-01-15T22:00:00Z",
+      "updated_at": "2024-01-15T22:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 26,
+    "fields": {
+      "owner": 2,
+      "title": "Enduro Mountain Beast",
+      "description": "Enduro-style mountain e-bike built for aggressive downhill and technical trail riding.",
+      "location": "Bike Park, Whistler",
+      "hourly_rate": "32.00",
+      "daily_rate": "240.00",
+      "bike_type": "mountain",
+      "battery_range": 78,
+      "max_speed": 35,
+      "weight": "31.00",
+      "features": ["Enduro geometry", "Long travel suspension", "Aggressive tires", "Downhill optimization"],
+      "status": "maintenance",
+      "created_at": "2024-01-20T21:00:00Z",
+      "updated_at": "2024-01-20T21:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 27,
+    "fields": {
+      "owner": 1,
+      "title": "Time Trial Road Machine",
+      "description": "Aerodynamic time trial road e-bike designed for maximum speed and efficiency in racing conditions.",
+      "location": "Velodrome, Los Angeles",
+      "hourly_rate": "27.00",
+      "daily_rate": "185.00",
+      "bike_type": "road",
+      "battery_range": 65,
+      "max_speed": 42,
+      "weight": "15.50",
+      "features": ["Aerodynamic position", "Time trial bars", "Wind tunnel tested", "Race optimization"],
+      "status": "available",
+      "created_at": "2024-01-15T23:00:00Z",
+      "updated_at": "2024-01-15T23:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 28,
+    "fields": {
+      "owner": 2,
+      "title": "Family Cargo Transport",
+      "description": "Family-friendly cargo e-bike designed to safely transport children and family gear for outings.",
+      "location": "Family Park, Minneapolis",
+      "hourly_rate": "20.00",
+      "daily_rate": "130.00",
+      "bike_type": "cargo",
+      "battery_range": 55,
+      "max_speed": 20,
+      "weight": "38.00",
+      "features": ["Child seats", "Safety harnesses", "Family storage", "Stability system"],
+      "status": "available",
+      "created_at": "2024-01-20T21:30:00Z",
+      "updated_at": "2024-01-20T21:30:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 29,
+    "fields": {
+      "owner": 1,
+      "title": "Executive Fold Luxury",
+      "description": "Premium folding e-bike designed for executives and professionals. Luxury features with practical functionality.",
+      "location": "Business Center, Houston",
+      "hourly_rate": "25.00",
+      "daily_rate": "170.00",
+      "bike_type": "folding",
+      "battery_range": 60,
+      "max_speed": 27,
+      "weight": "19.00",
+      "features": ["Luxury materials", "Executive styling", "Premium components", "Concierge service"],
+      "status": "available",
+      "created_at": "2024-01-16T00:00:00Z",
+      "updated_at": "2024-01-16T00:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 30,
+    "fields": {
+      "owner": 2,
+      "title": "Ultimate Hybrid Adventure",
+      "description": "The ultimate hybrid e-bike combining the best features of all bike types. Perfect for any adventure.",
+      "location": "Adventure Hub, Salt Lake City",
+      "hourly_rate": "22.00",
+      "daily_rate": "145.00",
+      "bike_type": "hybrid",
+      "battery_range": 85,
+      "max_speed": 30,
+      "weight": "25.00",
+      "features": ["Ultimate versatility", "Premium everything", "Adventure ready", "All-in-one solution"],
+      "status": "unavailable",
+      "created_at": "2024-01-20T22:00:00Z",
+      "updated_at": "2024-01-20T22:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 31,
+    "fields": {
+      "owner": 1,
+      "title": "Urban Explorer E-Bike",
+      "description": "Perfect city bike with long-lasting battery and comfortable ride. Great for commuting and leisure rides around the city.",
+      "location": "Downtown District, New York",
+      "hourly_rate": "12.50",
+      "daily_rate": "75.00",
+      "bike_type": "city",
+      "battery_range": 60,
+      "max_speed": 25,
+      "weight": "22.50",
+      "features": ["GPS tracking", "Phone holder", "LED lights", "Cargo rack"],
+      "status": "available",
+      "created_at": "2024-01-15T11:00:00Z",
+      "updated_at": "2024-01-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 32,
+    "fields": {
+      "owner": 1,
+      "title": "Mountain Trail Beast",
+      "description": "Heavy-duty mountain e-bike with powerful motor and excellent suspension. Perfect for off-road adventures.",
+      "location": "Mountain View, California",
+      "hourly_rate": "18.00",
+      "daily_rate": "120.00",
+      "bike_type": "mountain",
+      "battery_range": 80,
+      "max_speed": 28,
+      "weight": "26.00",
+      "features": ["Full suspension", "All-terrain tires", "Water bottle holder", "Mud guards"],
+      "status": "available",
+      "created_at": "2024-01-15T11:15:00Z",
+      "updated_at": "2024-01-15T11:15:00Z"
+    }
+  },
+  {
+    "model": "bikes.bike",
+    "pk": 33,
+    "fields": {
+      "owner": 2,
+      "title": "Speedy Road Runner",
+      "description": "Lightweight road e-bike designed for speed and efficiency. Ideal for long-distance rides and fitness enthusiasts.",
+      "location": "Central Park Area, New York",
+      "hourly_rate": "15.00",
+      "daily_rate": "90.00",
+      "bike_type": "road",
+      "battery_range": 70,
+      "max_speed": 32,
+      "weight": "18.50",
+      "features": ["Carbon fiber frame", "Racing handlebars", "Performance tires", "Digital display"],
+      "status": "available",
+      "created_at": "2024-01-20T15:00:00Z",
+      "updated_at": "2024-01-20T15:00:00Z"
+    }
+  }
+] 

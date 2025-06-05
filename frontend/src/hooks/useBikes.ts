@@ -1,69 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bike, CreateBikeData, UpdateBikeData, BikeFilters, BikeImage, BikeListResponse } from '@/lib/types/bike';
-import { APIResponse, PaginatedAPIResponse, APIResponseNoData, APIListResponse } from '@/lib/types/api';
+import { Bike, CreateBikeData, UpdateBikeData, BikeFilters, BikeImage } from '@/lib/types/bike';
+import { APIResponse, PaginatedAPIResponse } from '@/lib/types/api';
 import { useToast } from '@/hooks/use-toast';
-
-// API Configuration
-const API_BASE_URL = 'http://localhost:8001/api/v1';
-
-// Helper function to get auth token from localStorage
-const getAuthToken = (): string | null => {
-    return localStorage.getItem('token');
-};
-
-// Base fetch function with authentication
-export const apiRequest = async <T = any>(url: string, options: RequestInit = {}): Promise<T> => {
-    const token = getAuthToken();
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(options.headers as Record<string, string>),
-    };
-
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-        ...options,
-        headers,
-    });
-
-    const responseData: APIResponse<T> = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-        // Handle custom error response format
-        const errorMessage =
-            responseData.message ||
-            (responseData as any).detail ||
-            (responseData as any).error ||
-            `HTTP ${response.status}`;
-        throw new Error(errorMessage);
-    }
-
-    // Check if response follows our custom format
-    // if (responseData.hasOwnProperty('success') && responseData.hasOwnProperty('data')) {
-    //     if (!responseData.success) {
-    //         throw new Error(responseData.message || 'Request failed');
-    //     }
-    //     return responseData as unknown as T;
-    // }
-
-    // Fallback for responses that don't follow our custom format yet
-    return responseData as T;
-};
-
-// Helper function to build query string from filters
-const buildQueryString = (filters: BikeFilters): string => {
-    const params = new URLSearchParams();
-
-    Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-            params.append(key, String(value));
-        }
-    });
-
-    return params.toString();
-};
+import { API_BASE_URL, apiRequest, buildQueryString, getAuthToken } from '@/lib/utils/apiRequest';
 
 // API Functions
 const bikeApi = {
