@@ -13,12 +13,14 @@ from bikes.serializers import MaintenanceTicketSerializer
 
 class HomePageAPIView(APIView):
     """Home page view."""
+
     permission_classes = [AllowAny]
-    
+
     def get(self, request):
         # Get the first 8 bikes
         bikes = Bike.objects.all()[:8]
-        serializer = BikeSerializer(bikes, many=True)
+        # Get the request from the context
+        serializer = BikeSerializer(bikes, many=True, context=self.get_renderer_context())
         context = {
             "bikes": serializer.data,
         }
@@ -28,6 +30,7 @@ class HomePageAPIView(APIView):
             data=context,
             status_code=status.HTTP_200_OK,
         )
+
 
 class MaintenanceTicketListCreateView(generics.ListCreateAPIView):
     serializer_class = MaintenanceTicketSerializer

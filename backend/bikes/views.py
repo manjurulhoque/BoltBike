@@ -65,19 +65,6 @@ class BikeListAPIView(generics.ListAPIView):
         """Override list method to use custom response format."""
         queryset = self.filter_queryset(self.get_queryset())
 
-        # Check if limit parameter is provided
-        limit_param = self.request.query_params.get("limit")
-
-        # If limit parameter is provided, skip pagination and return limited results
-        if limit_param is not None:
-            serializer = self.get_serializer(queryset, many=True)
-            return api_response(
-                success=True,
-                message="Bikes fetched successfully",
-                data=serializer.data,
-                status_code=status.HTTP_200_OK,
-            )
-
         # Use pagination for requests without limit parameter
         page = self.paginate_queryset(queryset)
         if page is not None:

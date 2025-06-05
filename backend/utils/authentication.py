@@ -8,7 +8,7 @@ class OptionalJWTAuthentication(JWTAuthentication):
     Custom JWT authentication that doesn't fail on invalid tokens.
     This allows public endpoints to work even with expired/invalid tokens.
     """
-    
+
     def authenticate(self, request):
         try:
             return super().authenticate(request)
@@ -18,4 +18,4 @@ class OptionalJWTAuthentication(JWTAuthentication):
             return None
         except Exception:
             # For any other authentication errors, also treat as anonymous
-            return None 
+            return None

@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.core.validators import FileExtensionValidator
 
 from .models import Bike, BikeImage, MaintenanceTicket
 from users.serializers import UserSerializer
@@ -40,20 +39,7 @@ class BikeSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True)
     images = BikeImageSerializer(many=True, read_only=True)
     image_files = serializers.ListField(
-        child=serializers.ImageField(
-            validators=[
-                FileExtensionValidator(
-                    allowed_extensions=[
-                        "jpg",
-                        "jpeg",
-                        "png",
-                        "gif",
-                        "webp",
-                        "avif",
-                    ]
-                )
-            ]
-        ),
+        child=serializers.ImageField(),
         write_only=True,
         required=False,
         help_text="Upload multiple images for the bike",
@@ -63,12 +49,10 @@ class BikeSerializer(serializers.ModelSerializer):
         child=serializers.IntegerField(),
         write_only=True,
         required=False,
-        help_text="List of image IDs to delete"
+        help_text="List of image IDs to delete",
     )
     primary_image_id = serializers.IntegerField(
-        write_only=True,
-        required=False,
-        help_text="ID of the image to set as primary"
+        write_only=True, required=False, help_text="ID of the image to set as primary"
     )
 
     class Meta:
@@ -104,8 +88,8 @@ class BikeSerializer(serializers.ModelSerializer):
 
     def validate_delete_image_ids(self, value):
         """Validate that image IDs belong to this bike."""
-        if value and hasattr(self, 'instance') and self.instance:
-            bike_image_ids = list(self.instance.images.values_list('id', flat=True))
+        if value and hasattr(self, "instance") and self.instance:
+            bike_image_ids = list(self.instance.images.values_list("id", flat=True))
             invalid_ids = [img_id for img_id in value if img_id not in bike_image_ids]
             if invalid_ids:
                 raise serializers.ValidationError(
@@ -115,7 +99,7 @@ class BikeSerializer(serializers.ModelSerializer):
 
     def validate_primary_image_id(self, value):
         """Validate that primary image ID belongs to this bike."""
-        if value and hasattr(self, 'instance') and self.instance:
+        if value and hasattr(self, "instance") and self.instance:
             if not self.instance.images.filter(id=value).exists():
                 raise serializers.ValidationError(
                     "Invalid primary image ID. This image doesn't belong to this bike."
@@ -127,7 +111,7 @@ class BikeSerializer(serializers.ModelSerializer):
         image_files = validated_data.pop("image_files", [])
         validated_data.pop("delete_image_ids", None)  # Not applicable for creation
         validated_data.pop("primary_image_id", None)  # Not applicable for creation
-        
+
         bike = super().create(validated_data)
 
         # Create BikeImage instances for uploaded files
@@ -146,15 +130,12 @@ class BikeSerializer(serializers.ModelSerializer):
         image_files = validated_data.pop("image_files", None)
         delete_image_ids = validated_data.pop("delete_image_ids", None)
         primary_image_id = validated_data.pop("primary_image_id", None)
-        
+
         bike = super().update(instance, validated_data)
 
         # Delete specified images
         if delete_image_ids:
-            BikeImage.objects.filter(
-                bike=bike, 
-                id__in=delete_image_ids
-            ).delete()
+            BikeImage.objects.filter(bike=bike, id__in=delete_image_ids).delete()
 
         # Add new images if provided
         if image_files:
@@ -172,9 +153,13 @@ class BikeSerializer(serializers.ModelSerializer):
         # Set primary image if specified
         if primary_image_id:
             # Unset current primary
-            BikeImage.objects.filter(bike=bike, is_primary=True).update(is_primary=False)
+            BikeImage.objects.filter(bike=bike, is_primary=True).update(
+                is_primary=False
+            )
             # Set new primary
-            BikeImage.objects.filter(bike=bike, id=primary_image_id).update(is_primary=True)
+            BikeImage.objects.filter(bike=bike, id=primary_image_id).update(
+                is_primary=True
+            )
 
         # Ensure at least one image is primary if images exist
         bike_images = BikeImage.objects.filter(bike=bike)
