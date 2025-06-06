@@ -32,4 +32,4 @@ class Booking(BaseModel):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.bike.title} - {self.renter.full_name()}"
+        return f"{self.bike.title} - {self.renter.get_full_name()}"
