@@ -442,10 +442,16 @@ const BikeDetails = () => {
             {/* Booking Process Modal */}
             {showBookingProcess && (
                 <BookingProcess
-                    bikeId={String(bike.id)}
+                    bikeId={bike.id}
                     bikeTitle={bike.title}
-                    pricePerDay={pricePerDay}
+                    hourlyRate={bike.hourly_rate}
+                    dailyRate={bike.daily_rate}
                     onClose={() => setShowBookingProcess(false)}
+                    onSuccess={(bookingId) => {
+                        console.log('Booking created with ID:', bookingId);
+                        setShowBookingProcess(false);
+                        toast.success('Booking created successfully!');
+                    }}
                 />
             )}
         </div>

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 from .models import Booking, BookingStatus
 from users.serializers import UserSerializer
 from bikes.serializers import BikeSerializer
@@ -111,16 +112,22 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         
         # Use daily rate if booking is for 24+ hours, otherwise hourly rate
         if hours >= 24:
-            days = hours / 24
+            days = Decimal(str(hours / 24))
             total_price = days * bike.daily_rate
         else:
-            total_price = hours * bike.hourly_rate
+            # Handle case where hourly_rate might be None
+            if bike.hourly_rate:
+                total_price = Decimal(str(hours)) * bike.hourly_rate
+            else:
+                # Fallback to pro-rated daily rate if hourly rate is not set
+                total_price = Decimal(str(hours)) * (bike.daily_rate / Decimal('24'))
+        
         
         # Create booking
         booking = Booking.objects.create(
             bike=bike,
             renter=self.context["request"].user,
-            total_price=round(total_price, 2),
+            total_price=total_price.quantize(Decimal('0.01')),
             **validated_data
         )
         

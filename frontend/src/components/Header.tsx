@@ -106,6 +106,11 @@ const Header = () => {
                                 <>
                                     {user ? (
                                         <>
+                                            <Link to="/bookings">
+                                                <Button variant="ghost" className="text-sm font-medium">
+                                                    Bookings
+                                                </Button>
+                                            </Link>
                                             <Link to="/dashboard">
                                                 <Button variant="ghost" size="sm" className="rounded-full">
                                                     <User className="h-4 w-4" />

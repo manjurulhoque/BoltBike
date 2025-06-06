@@ -9,6 +9,7 @@ import BikeDetails from './pages/BikeDetails';
 import ListBike from './pages/ListBike';
 import EditBike from './pages/EditBike';
 import MyBikes from './pages/MyBikes';
+import Bookings from './pages/Bookings';
 import Map from './pages/Map';
 import NotFound from './pages/NotFound';
 import Home from './pages/Home';
@@ -80,6 +81,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <MyBikes />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/bookings"
+                            element={
+                                <ProtectedRoute>
+                                    <Bookings />
                                 </ProtectedRoute>
                             }
                         />

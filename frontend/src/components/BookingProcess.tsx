@@ -5,39 +5,66 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useCreateBooking } from '@/hooks/useBookings';
 
 interface BookingProcessProps {
-    bikeId: string;
+    bikeId: number;
     bikeTitle: string;
-    pricePerDay: number;
+    hourlyRate?: number;
+    dailyRate: number;
     onClose: () => void;
+    onSuccess?: (bookingId: number) => void;
 }
 
-const BookingProcess = ({ bikeId, bikeTitle, pricePerDay, onClose }: BookingProcessProps) => {
+const BookingProcess = ({ bikeId, bikeTitle, hourlyRate, dailyRate, onClose, onSuccess }: BookingProcessProps) => {
     const [step, setStep] = useState(1);
-    const [isLoading, setIsLoading] = useState(false);
+    const [bookingId, setBookingId] = useState<number | null>(null);
     const [bookingData, setBookingData] = useState({
         startDate: '',
         endDate: '',
-        pickupTime: '09:00',
-        returnTime: '18:00',
+        startTime: '09:00',
+        endTime: '18:00',
         cardNumber: '',
         expiryDate: '',
         cvv: '',
         nameOnCard: '',
     });
     const { toast } = useToast();
+    const createBooking = useCreateBooking();
 
-    const calculateDays = () => {
-        if (!bookingData.startDate || !bookingData.endDate) return 0;
-        const start = new Date(bookingData.startDate);
-        const end = new Date(bookingData.endDate);
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays || 1;
+    const calculateDuration = () => {
+        if (!bookingData.startDate || !bookingData.endDate || !bookingData.startTime || !bookingData.endTime) {
+            return { days: 0, hours: 0, totalHours: 0 };
+        }
+
+        const startDateTime = new Date(`${bookingData.startDate}T${bookingData.startTime}`);
+        const endDateTime = new Date(`${bookingData.endDate}T${bookingData.endTime}`);
+        const diffTime = endDateTime.getTime() - startDateTime.getTime();
+        const totalHours = diffTime / (1000 * 60 * 60);
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+
+        return {
+            days: Math.max(0, days),
+            hours: Math.max(0, hours),
+            totalHours: Math.max(1, totalHours), // Minimum 1 hour
+        };
     };
 
-    const totalAmount = calculateDays() * pricePerDay;
+    const calculatePrice = () => {
+        const duration = calculateDuration();
+
+        // If booking is 24+ hours, use daily rate, otherwise use hourly rate
+        if (duration.totalHours >= 24) {
+            const totalDays = Math.ceil(duration.totalHours / 24);
+            return totalDays * dailyRate;
+        } else {
+            const hourlyPrice = hourlyRate || dailyRate / 24; // Fallback to daily rate / 24 if no hourly rate
+            return Math.ceil(duration.totalHours) * hourlyPrice;
+        }
+    };
+
+    const totalAmount = calculatePrice();
     const serviceFee = 15;
     const finalTotal = totalAmount + serviceFee;
 
@@ -45,25 +72,86 @@ const BookingProcess = ({ bikeId, bikeTitle, pricePerDay, onClose }: BookingProc
         setBookingData((prev) => ({ ...prev, [field]: value }));
     };
 
+    const validateDateTimeSelection = () => {
+        if (!bookingData.startDate || !bookingData.endDate || !bookingData.startTime || !bookingData.endTime) {
+            return false;
+        }
+
+        const startDateTime = new Date(`${bookingData.startDate}T${bookingData.startTime}`);
+        const endDateTime = new Date(`${bookingData.endDate}T${bookingData.endTime}`);
+
+        // Check if start time is in the future
+        if (startDateTime <= new Date()) {
+            toast({
+                title: 'Invalid Start Time',
+                description: 'Start time must be in the future.',
+                variant: 'destructive',
+            });
+            return false;
+        }
+
+        // Check if end time is after start time
+        if (endDateTime <= startDateTime) {
+            toast({
+                title: 'Invalid End Time',
+                description: 'End time must be after start time.',
+                variant: 'destructive',
+            });
+            return false;
+        }
+
+        // Check minimum duration (1 hour)
+        const duration = calculateDuration();
+        if (duration.totalHours < 1) {
+            toast({
+                title: 'Minimum Duration',
+                description: 'Minimum booking duration is 1 hour.',
+                variant: 'destructive',
+            });
+            return false;
+        }
+
+        return true;
+    };
+
     const handleNextStep = () => {
+        if (step === 1 && !validateDateTimeSelection()) {
+            return;
+        }
+
         if (step < 3) {
             setStep(step + 1);
         }
     };
 
     const handleSubmitBooking = async () => {
-        setIsLoading(true);
+        try {
+            // Create ISO datetime strings for start and end times
+            const startDateTime = new Date(`${bookingData.startDate}T${bookingData.startTime}`);
+            const endDateTime = new Date(`${bookingData.endDate}T${bookingData.endTime}`);
 
-        // Simulate booking process
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+            const bookingPayload = {
+                bike_id: bikeId,
+                start_time: startDateTime.toISOString(),
+                end_time: endDateTime.toISOString(),
+            };
 
-        setIsLoading(false);
-        setStep(4);
+            const response = await createBooking.mutateAsync(bookingPayload);
 
-        toast({
-            title: 'Booking Confirmed!',
-            description: `Your e-bike "${bikeTitle}" has been successfully booked.`,
-        });
+            if (response.data) {
+                setBookingId(response.data.id);
+            }
+
+            setStep(4);
+
+            // Call success callback if provided
+            if (onSuccess && response.data) {
+                onSuccess(response.data.id);
+            }
+        } catch (error) {
+            // Error is already handled by the useCreateBooking hook
+            console.error('Booking submission failed:', error);
+        }
     };
 
     const steps = [
@@ -141,28 +229,33 @@ const BookingProcess = ({ bikeId, bikeTitle, pricePerDay, onClose }: BookingProc
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="pickupTime">Pickup Time</Label>
+                                    <Label htmlFor="startTime">Start Time</Label>
                                     <Input
-                                        id="pickupTime"
+                                        id="startTime"
                                         type="time"
-                                        value={bookingData.pickupTime}
-                                        onChange={(e) => handleInputChange('pickupTime', e.target.value)}
+                                        value={bookingData.startTime}
+                                        onChange={(e) => handleInputChange('startTime', e.target.value)}
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="returnTime">Return Time</Label>
+                                    <Label htmlFor="endTime">End Time</Label>
                                     <Input
-                                        id="returnTime"
+                                        id="endTime"
                                         type="time"
-                                        value={bookingData.returnTime}
-                                        onChange={(e) => handleInputChange('returnTime', e.target.value)}
+                                        value={bookingData.endTime}
+                                        onChange={(e) => handleInputChange('endTime', e.target.value)}
                                     />
                                 </div>
                             </div>
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <div className="flex justify-between">
-                                    <span>Duration: {calculateDays()} day(s)</span>
-                                    <span className="font-semibold">${totalAmount}</span>
+                                    <span>
+                                        Duration:{' '}
+                                        {calculateDuration().totalHours < 24
+                                            ? `${Math.ceil(calculateDuration().totalHours)} hour(s)`
+                                            : `${Math.ceil(calculateDuration().totalHours / 24)} day(s)`}
+                                    </span>
+                                    <span className="font-semibold">${totalAmount.toFixed(2)}</span>
                                 </div>
                             </div>
                             <Button
@@ -246,11 +339,15 @@ const BookingProcess = ({ bikeId, bikeTitle, pricePerDay, onClose }: BookingProc
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Duration:</span>
-                                    <span>{calculateDays()} day(s)</span>
+                                    <span>
+                                        {calculateDuration().totalHours < 24
+                                            ? `${Math.ceil(calculateDuration().totalHours)} hour(s)`
+                                            : `${Math.ceil(calculateDuration().totalHours / 24)} day(s)`}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Subtotal:</span>
-                                    <span>${totalAmount}</span>
+                                    <span>${totalAmount.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Service Fee:</span>
@@ -259,15 +356,15 @@ const BookingProcess = ({ bikeId, bikeTitle, pricePerDay, onClose }: BookingProc
                                 <hr />
                                 <div className="flex justify-between font-semibold text-lg">
                                     <span>Total:</span>
-                                    <span>${finalTotal}</span>
+                                    <span>${finalTotal.toFixed(2)}</span>
                                 </div>
                             </div>
                             <Button
                                 onClick={handleSubmitBooking}
                                 className="w-full bg-rose-500 hover:bg-rose-600"
-                                disabled={isLoading}
+                                disabled={createBooking.isPending}
                             >
-                                {isLoading ? (
+                                {createBooking.isPending ? (
                                     <>
                                         <Loader className="h-4 w-4 mr-2 animate-spin" />
                                         Processing...
@@ -288,9 +385,7 @@ const BookingProcess = ({ bikeId, bikeTitle, pricePerDay, onClose }: BookingProc
                                 Your e-bike has been successfully booked. You'll receive a confirmation email shortly.
                             </p>
                             <div className="bg-green-50 p-4 rounded-lg">
-                                <p className="text-sm text-green-700">
-                                    Booking ID: #{Math.random().toString(36).substr(2, 9).toUpperCase()}
-                                </p>
+                                <p className="text-sm text-green-700">Booking ID: #{bookingId || 'PENDING'}</p>
                             </div>
                             <Button onClick={onClose} className="w-full">
                                 Close
