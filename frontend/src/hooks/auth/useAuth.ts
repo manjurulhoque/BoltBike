@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LoginCredentials, SignupCredentials, AuthResponse, User } from '@/lib/types/auth';
+import {
+    LoginCredentials,
+    SignupCredentials,
+    AuthResponse,
+    User,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+} from '@/lib/types/auth';
 import { APIResponse } from '@/lib/types/api';
 import { useAuthToken } from '../useAuthToken';
 import { API_BASE_URL } from '@/lib/utils/apiRequest';
@@ -137,6 +144,55 @@ export const useUser = () => {
         retry: false, // Don't retry failed requests (auth errors)
         networkMode: 'online', // Only run when online
         notifyOnChangeProps: ['data', 'error'], // Only notify when data or error changes
+    });
+};
+
+// Password reset request mutation
+export const usePasswordResetRequest = () => {
+    return useMutation({
+        mutationFn: async (data: PasswordResetRequest) => {
+            const response = await fetch(`${API_URL}/auth/password-reset/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            const responseData: APIResponse<null> = await response.json();
+
+            if (!response.ok) {
+                const errorMessage = responseData.message || 'Password reset request failed';
+                throw new Error(errorMessage);
+            }
+
+            return responseData;
+        },
+    });
+};
+
+// Password reset confirm mutation
+export const usePasswordResetConfirm = () => {
+    const navigate = useNavigate();
+
+    return useMutation({
+        mutationFn: async ({ uid, token, ...data }: PasswordResetConfirm & { uid: string; token: string }) => {
+            const response = await fetch(`${API_URL}/auth/password-reset-confirm/${uid}/${token}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            const responseData: APIResponse<null> = await response.json();
+
+            if (!response.ok) {
+                const errorMessage = responseData.message || 'Password reset failed';
+                throw new Error(errorMessage);
+            }
+
+            return responseData;
+        },
+        onSuccess: () => {
+            navigate('/login');
+        },
     });
 };
 

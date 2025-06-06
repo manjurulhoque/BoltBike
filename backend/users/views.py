@@ -5,7 +5,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from utils.response import api_response
 from utils.authentication import OptionalJWTAuthentication
-from .serializers import SignupSerializer, UserSerializer
+from .serializers import (
+    SignupSerializer, 
+    UserSerializer, 
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer
+)
 
 
 class SignupAPIView(APIView):
@@ -85,4 +90,60 @@ class MeAPIView(APIView):
             success=True,
             message="User fetched successfully",
             data=serializer.data,
+        )
+
+
+class PasswordResetRequestAPIView(APIView):
+    """Request password reset email."""
+    authentication_classes = [OptionalJWTAuthentication]
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return api_response(
+                success=True,
+                message="If an account with this email exists, a password reset link has been sent.",
+                data=None,
+                status_code=status.HTTP_200_OK,
+            )
+        return api_response(
+            success=False,
+            message="Invalid email address",
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class PasswordResetConfirmAPIView(APIView):
+    """Confirm password reset with token."""
+    authentication_classes = [OptionalJWTAuthentication]
+    permission_classes = [AllowAny]
+
+    def post(self, request, uid, token):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if serializer.is_valid():
+            # Validate token and uid
+            try:
+                user = serializer.validate_token_and_uid(uid, token)
+                serializer.save()
+                return api_response(
+                    success=True,
+                    message="Password has been reset successfully",
+                    data=None,
+                    status_code=status.HTTP_200_OK,
+                )
+            except Exception as e:
+                return api_response(
+                    success=False,
+                    message=str(e),
+                    data=None,
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+        return api_response(
+            success=False,
+            message="Invalid data",
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )

@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Bikes from './pages/Bikes';
 import BikeDetails from './pages/BikeDetails';
@@ -42,6 +44,8 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
                         <Route path="/bikes" element={<Bikes />} />
                         <Route path="/bikes/:id" element={<BikeDetails />} />
                         <Route path="/map" element={<Map />} />
