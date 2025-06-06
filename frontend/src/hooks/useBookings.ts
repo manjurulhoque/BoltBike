@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Booking, CreateBookingData, UpdateBookingStatusData, BookingFilters } from '@/lib/types/booking';
 import { APIResponse, PaginatedAPIResponse } from '@/lib/types/api';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { apiRequest, buildQueryString } from '@/lib/utils/apiRequest';
 
 // API Functions
@@ -49,6 +49,27 @@ const bookingApi = {
     // Get bookings for user's bikes (as owner)
     getBikeBookings: async (): Promise<PaginatedAPIResponse<Booking>> => {
         return await apiRequest<PaginatedAPIResponse<Booking>>('/bookings/bike-bookings/');
+    },
+
+    // Start a rental (approved -> active)
+    startRental: async (id: number): Promise<APIResponse<Booking>> => {
+        return await apiRequest<APIResponse<Booking>>(`/bookings/${id}/start/`, {
+            method: 'POST',
+        });
+    },
+
+    // Complete a rental (active -> completed)
+    completeRental: async (id: number): Promise<APIResponse<Booking>> => {
+        return await apiRequest<APIResponse<Booking>>(`/bookings/${id}/complete/`, {
+            method: 'POST',
+        });
+    },
+
+    // Check expired bookings (auto-transition)
+    checkExpiredBookings: async (): Promise<APIResponse<{ started_count: number; completed_count: number }>> => {
+        return await apiRequest<APIResponse<{ started_count: number; completed_count: number }>>(
+            '/bookings/check-expired/',
+        );
     },
 };
 
@@ -105,7 +126,6 @@ export const useBikeBookings = () => {
 // Create Booking Mutation
 export const useCreateBooking = () => {
     const queryClient = useQueryClient();
-    const { toast } = useToast();
 
     return useMutation<APIResponse<Booking>, Error, CreateBookingData>({
         mutationFn: (data: CreateBookingData) => bookingApi.create(data),
@@ -119,17 +139,10 @@ export const useCreateBooking = () => {
                 queryClient.setQueryData(bookingKeys.detail(response.data.id), response);
             }
 
-            toast({
-                title: 'Booking Created Successfully!',
-                description: response.message || 'Your booking request has been submitted.',
-            });
+            toast.success(response.message || 'Your booking request has been submitted.');
         },
         onError: (error: Error) => {
-            toast({
-                title: 'Booking Failed',
-                description: error.message || 'Failed to create booking. Please try again.',
-                variant: 'destructive',
-            });
+            toast.error(error.message || 'Failed to create booking. Please try again.');
         },
     });
 };
@@ -137,7 +150,6 @@ export const useCreateBooking = () => {
 // Update Booking Status Mutation
 export const useUpdateBookingStatus = () => {
     const queryClient = useQueryClient();
-    const { toast } = useToast();
 
     return useMutation<APIResponse<Booking>, Error, { id: number; data: UpdateBookingStatusData }>({
         mutationFn: ({ id, data }) => bookingApi.updateStatus(id, data),
@@ -152,17 +164,10 @@ export const useUpdateBookingStatus = () => {
                 queryClient.setQueryData(bookingKeys.detail(variables.id), response);
             }
 
-            toast({
-                title: 'Status Updated',
-                description: response.message || 'Booking status has been updated successfully.',
-            });
+            toast.success(response.message || 'Booking status has been updated successfully.');
         },
         onError: (error: Error) => {
-            toast({
-                title: 'Update Failed',
-                description: error.message || 'Failed to update booking status. Please try again.',
-                variant: 'destructive',
-            });
+            toast.error(error.message || 'Failed to update booking status. Please try again.');
         },
     });
 };
@@ -170,7 +175,6 @@ export const useUpdateBookingStatus = () => {
 // Cancel Booking Mutation
 export const useCancelBooking = () => {
     const queryClient = useQueryClient();
-    const { toast } = useToast();
 
     return useMutation<APIResponse<Booking>, Error, number>({
         mutationFn: (id: number) => bookingApi.cancel(id),
@@ -185,17 +189,86 @@ export const useCancelBooking = () => {
                 queryClient.setQueryData(bookingKeys.detail(bookingId), response);
             }
 
-            toast({
-                title: 'Booking Cancelled',
-                description: response.message || 'Your booking has been cancelled successfully.',
-            });
+            toast.success(response.message || 'Your booking has been cancelled successfully.');
         },
         onError: (error: Error) => {
-            toast({
-                title: 'Cancellation Failed',
-                description: error.message || 'Failed to cancel booking. Please try again.',
-                variant: 'destructive',
-            });
+            toast.error(error.message || 'Failed to cancel booking. Please try again.');
+        },
+    });
+};
+
+// Start Rental Mutation
+export const useStartRental = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation<APIResponse<Booking>, Error, number>({
+        mutationFn: (id: number) => bookingApi.startRental(id),
+        onSuccess: (response, bookingId) => {
+            // Invalidate and refetch bookings
+            queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: bookingKeys.myBookings() });
+            queryClient.invalidateQueries({ queryKey: bookingKeys.bikeBookings() });
+
+            // Update the specific booking in cache
+            if (response.data) {
+                queryClient.setQueryData(bookingKeys.detail(bookingId), response);
+            }
+
+            toast.success(response.message || 'The rental has been started successfully.');
+        },
+        onError: (error: Error) => {
+            console.log(error.message);
+            toast.error(error.message || 'Failed to start rental. Please try again.');
+        },
+    });
+};
+
+// Complete Rental Mutation
+export const useCompleteRental = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation<APIResponse<Booking>, Error, number>({
+        mutationFn: (id: number) => bookingApi.completeRental(id),
+        onSuccess: (response, bookingId) => {
+            // Invalidate and refetch bookings
+            queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: bookingKeys.myBookings() });
+            queryClient.invalidateQueries({ queryKey: bookingKeys.bikeBookings() });
+
+            // Update the specific booking in cache
+            if (response.data) {
+                queryClient.setQueryData(bookingKeys.detail(bookingId), response);
+            }
+
+            toast.success(response.message || 'The rental has been completed successfully.');
+        },
+        onError: (error: Error) => {
+            console.log(error.message);
+            toast.error(error.message || 'Failed to complete rental. Please try again.');
+        },
+    });
+};
+
+// Check Expired Bookings Mutation
+export const useCheckExpiredBookings = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation<APIResponse<{ started_count: number; completed_count: number }>, Error, void>({
+        mutationFn: () => bookingApi.checkExpiredBookings(),
+        onSuccess: (response) => {
+            // Invalidate and refetch all booking lists
+            queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: bookingKeys.myBookings() });
+            queryClient.invalidateQueries({ queryKey: bookingKeys.bikeBookings() });
+
+            const { started_count, completed_count } = response.data || { started_count: 0, completed_count: 0 };
+
+            if (started_count > 0 || completed_count > 0) {
+                toast.success(`Started ${started_count} rentals and completed ${completed_count} rentals.`);
+            }
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || 'Failed to check expired bookings.');
         },
     });
 };

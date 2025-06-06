@@ -1,12 +1,20 @@
 import { useState } from 'react';
-import { Calendar, Clock, MapPin, User, Filter, Loader, Eye, CheckCircle, X, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Filter, Loader, Eye, CheckCircle, X, AlertTriangle, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Header from '@/components/Header';
-import { useMyBookings, useBikeBookings, useCancelBooking, useUpdateBookingStatus } from '@/hooks/useBookings';
+import {
+    useMyBookings,
+    useBikeBookings,
+    useCancelBooking,
+    useUpdateBookingStatus,
+    useStartRental,
+    useCompleteRental,
+    useCheckExpiredBookings,
+} from '@/hooks/useBookings';
 import { BookingStatus, Booking } from '@/lib/types/booking';
 import { format } from 'date-fns';
 
@@ -24,6 +32,9 @@ const Bookings = () => {
     const { data: bikeBookingsResponse, isLoading: bikeBookingsLoading } = useBikeBookings();
     const cancelBooking = useCancelBooking();
     const updateBookingStatus = useUpdateBookingStatus();
+    const startRental = useStartRental();
+    const completeRental = useCompleteRental();
+    const checkExpiredBookings = useCheckExpiredBookings();
 
     const myBookings = myBookingsResponse?.data?.results || [];
     const bikeBookings = bikeBookingsResponse?.data?.results || [];
@@ -60,6 +71,14 @@ const Bookings = () => {
         return booking.status === 'requested' && activeTab === 'bike-bookings';
     };
 
+    const canStartRental = (booking: Booking) => {
+        return booking.status === 'approved';
+    };
+
+    const canCompleteRental = (booking: Booking) => {
+        return booking.status === 'active';
+    };
+
     const handleCancelBooking = async () => {
         if (selectedBooking) {
             try {
@@ -80,6 +99,30 @@ const Bookings = () => {
             });
         } catch (error) {
             console.error('Failed to accept booking:', error);
+        }
+    };
+
+    const handleStartRental = async (bookingId: number) => {
+        try {
+            await startRental.mutateAsync(bookingId);
+        } catch (error) {
+            console.error('Failed to start rental:', error);
+        }
+    };
+
+    const handleCompleteRental = async (bookingId: number) => {
+        try {
+            await completeRental.mutateAsync(bookingId);
+        } catch (error) {
+            console.error('Failed to complete rental:', error);
+        }
+    };
+
+    const handleCheckExpiredBookings = async () => {
+        try {
+            await checkExpiredBookings.mutateAsync();
+        } catch (error) {
+            console.error('Failed to check expired bookings:', error);
         }
     };
 
@@ -136,27 +179,40 @@ const Bookings = () => {
                 </div>
 
                 {/* Filters */}
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="flex items-center gap-2">
-                        <Filter className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm text-gray-700">Filter by status:</span>
+                <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <Filter className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm text-gray-700">Filter by status:</span>
+                        </div>
+                        <Select
+                            value={statusFilter}
+                            onValueChange={(value) => setStatusFilter(value as BookingStatus | 'all')}
+                        >
+                            <SelectTrigger className="w-40">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="requested">Requested</SelectItem>
+                                <SelectItem value="approved">Approved</SelectItem>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <Select
-                        value={statusFilter}
-                        onValueChange={(value) => setStatusFilter(value as BookingStatus | 'all')}
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCheckExpiredBookings}
+                        disabled={checkExpiredBookings.isPending}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
                     >
-                        <SelectTrigger className="w-40">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="requested">Requested</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Clock className="h-4 w-4 mr-2" />
+                        {checkExpiredBookings.isPending ? 'Checking...' : 'Check for Updates'}
+                    </Button>
                 </div>
 
                 {/* Loading State */}
@@ -269,6 +325,32 @@ const Bookings = () => {
                                             >
                                                 <CheckCircle className="h-4 w-4 mr-1" />
                                                 {updateBookingStatus.isPending ? 'Accepting...' : 'Accept Booking'}
+                                            </Button>
+                                        )}
+
+                                        {canStartRental(booking) && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleStartRental(booking.id)}
+                                                disabled={startRental.isPending}
+                                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                            >
+                                                <Play className="h-4 w-4 mr-1" />
+                                                {startRental.isPending ? 'Starting...' : 'Start Rental'}
+                                            </Button>
+                                        )}
+
+                                        {canCompleteRental(booking) && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleCompleteRental(booking.id)}
+                                                disabled={completeRental.isPending}
+                                                className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                                            >
+                                                <CheckCircle className="h-4 w-4 mr-1" />
+                                                {completeRental.isPending ? 'Completing...' : 'Complete Rental'}
                                             </Button>
                                         )}
 
@@ -470,6 +552,34 @@ const Bookings = () => {
                                             >
                                                 <CheckCircle className="h-4 w-4 mr-2" />
                                                 Accept Booking
+                                            </Button>
+                                        )}
+
+                                        {canStartRental(selectedBooking) && (
+                                            <Button
+                                                onClick={() => {
+                                                    handleStartRental(selectedBooking.id);
+                                                    setShowDetailsModal(false);
+                                                }}
+                                                disabled={startRental.isPending}
+                                                className="bg-blue-600 hover:bg-blue-700"
+                                            >
+                                                <Play className="h-4 w-4 mr-2" />
+                                                Start Rental
+                                            </Button>
+                                        )}
+
+                                        {canCompleteRental(selectedBooking) && (
+                                            <Button
+                                                onClick={() => {
+                                                    handleCompleteRental(selectedBooking.id);
+                                                    setShowDetailsModal(false);
+                                                }}
+                                                disabled={completeRental.isPending}
+                                                className="bg-purple-600 hover:bg-purple-700"
+                                            >
+                                                <CheckCircle className="h-4 w-4 mr-2" />
+                                                Complete Rental
                                             </Button>
                                         )}
 

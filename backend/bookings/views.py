@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
+from django.utils import timezone
 
 from .models import Booking, BookingStatus
 from .serializers import (
@@ -340,5 +341,150 @@ def cancel_booking_api_view(request, pk):
         success=True,
         message="Booking cancelled successfully",
         data=serializer.data,
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def start_rental_api_view(request, pk):
+    """Start a rental (approved -> active)."""
+    try:
+        booking = Booking.objects.select_related("bike", "renter").get(pk=pk)
+    except Booking.DoesNotExist:
+        return api_response(
+            success=False,
+            message="Booking not found",
+            data=None,
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Check permissions - only renter or bike owner can start rental
+    user = request.user
+    if booking.renter != user and booking.bike.owner != user:
+        return api_response(
+            success=False,
+            message="You don't have permission to start this rental",
+            data=None,
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+
+    # Check if booking can be started
+    if booking.status != BookingStatus.APPROVED:
+        return api_response(
+            success=False,
+            message=f"Cannot start rental. Booking status is: {booking.status}",
+            data=None,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Check if start time has arrived (optional - remove if you want manual control)
+    current_time = timezone.now()
+    if current_time < booking.start_time:
+        return api_response(
+            success=False,
+            message="Cannot start rental before the scheduled start time",
+            data=None,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Start the rental
+    booking.status = BookingStatus.ACTIVE
+    booking.save()
+
+    # Return updated booking data
+    serializer = BookingSerializer(booking, context={"request": request})
+    return api_response(
+        success=True,
+        message="Rental started successfully",
+        data=serializer.data,
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def complete_rental_api_view(request, pk):
+    """Complete a rental (active -> completed)."""
+    try:
+        booking = Booking.objects.select_related("bike", "renter").get(pk=pk)
+    except Booking.DoesNotExist:
+        return api_response(
+            success=False,
+            message="Booking not found",
+            data=None,
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Check permissions - only renter or bike owner can complete rental
+    user = request.user
+    if booking.renter != user and booking.bike.owner != user:
+        return api_response(
+            success=False,
+            message="You don't have permission to complete this rental",
+            data=None,
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+
+    # Check if booking can be completed
+    if booking.status != BookingStatus.ACTIVE:
+        return api_response(
+            success=False,
+            message=f"Cannot complete rental. Booking status is: {booking.status}",
+            data=None,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Complete the rental
+    booking.status = BookingStatus.COMPLETED
+    booking.save()
+
+    # Return updated booking data
+    serializer = BookingSerializer(booking, context={"request": request})
+    return api_response(
+        success=True,
+        message="Rental completed successfully",
+        data=serializer.data,
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def check_expired_bookings_api_view(request):
+    """Check and automatically update expired bookings."""
+    current_time = timezone.now()
+    
+    # Auto-start approved bookings that should be active
+    approved_bookings = Booking.objects.filter(
+        status=BookingStatus.APPROVED,
+        start_time__lte=current_time
+    )
+    
+    started_count = 0
+    for booking in approved_bookings:
+        booking.status = BookingStatus.ACTIVE
+        booking.save()
+        started_count += 1
+    
+    # Auto-complete active bookings that have ended
+    active_bookings = Booking.objects.filter(
+        status=BookingStatus.ACTIVE,
+        end_time__lte=current_time
+    )
+    
+    completed_count = 0
+    for booking in active_bookings:
+        booking.status = BookingStatus.COMPLETED
+        booking.save()
+        completed_count += 1
+    
+    return api_response(
+        success=True,
+        message=f"Updated {started_count} bookings to active and {completed_count} bookings to completed",
+        data={
+            "started_count": started_count,
+            "completed_count": completed_count
+        },
         status_code=status.HTTP_200_OK,
     )
