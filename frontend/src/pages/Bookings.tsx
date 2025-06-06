@@ -1,22 +1,29 @@
 import { useState } from 'react';
-import { Calendar, Clock, MapPin, User, Filter, Loader } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Filter, Loader, Eye, CheckCircle, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Header from '@/components/Header';
-import { useMyBookings, useBikeBookings, useCancelBooking } from '@/hooks/useBookings';
-import { BookingStatus } from '@/lib/types/booking';
+import { useMyBookings, useBikeBookings, useCancelBooking, useUpdateBookingStatus } from '@/hooks/useBookings';
+import { BookingStatus, Booking } from '@/lib/types/booking';
 import { format } from 'date-fns';
 
 const Bookings = () => {
     const [activeTab, setActiveTab] = useState<'my-bookings' | 'bike-bookings'>('my-bookings');
     const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all');
 
+    // Modal states
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
     // Fetch bookings based on active tab
     const { data: myBookingsResponse, isLoading: myBookingsLoading } = useMyBookings();
     const { data: bikeBookingsResponse, isLoading: bikeBookingsLoading } = useBikeBookings();
     const cancelBooking = useCancelBooking();
+    const updateBookingStatus = useUpdateBookingStatus();
 
     const myBookings = myBookingsResponse?.data?.results || [];
     const bikeBookings = bikeBookingsResponse?.data?.results || [];
@@ -49,14 +56,41 @@ const Bookings = () => {
         return ['requested', 'approved'].includes(status);
     };
 
-    const handleCancelBooking = async (bookingId: number) => {
-        if (window.confirm('Are you sure you want to cancel this booking?')) {
+    const canAcceptBooking = (booking: Booking) => {
+        return booking.status === 'requested' && activeTab === 'bike-bookings';
+    };
+
+    const handleCancelBooking = async () => {
+        if (selectedBooking) {
             try {
-                await cancelBooking.mutateAsync(bookingId);
+                await cancelBooking.mutateAsync(selectedBooking.id);
+                setShowCancelModal(false);
+                setSelectedBooking(null);
             } catch (error) {
                 console.error('Failed to cancel booking:', error);
             }
         }
+    };
+
+    const handleAcceptBooking = async (bookingId: number) => {
+        try {
+            await updateBookingStatus.mutateAsync({
+                id: bookingId,
+                data: { status: 'approved' },
+            });
+        } catch (error) {
+            console.error('Failed to accept booking:', error);
+        }
+    };
+
+    const openCancelModal = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setShowCancelModal(true);
+    };
+
+    const openDetailsModal = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setShowDetailsModal(true);
     };
 
     const formatDateTime = (dateTimeString: string) => {
@@ -225,19 +259,33 @@ const Bookings = () => {
 
                                     {/* Actions */}
                                     <div className="flex gap-2">
+                                        {canAcceptBooking(booking) && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleAcceptBooking(booking.id)}
+                                                disabled={updateBookingStatus.isPending}
+                                                className="text-green-600 border-green-200 hover:bg-green-50"
+                                            >
+                                                <CheckCircle className="h-4 w-4 mr-1" />
+                                                {updateBookingStatus.isPending ? 'Accepting...' : 'Accept Booking'}
+                                            </Button>
+                                        )}
+
                                         {canCancelBooking(booking.status) && (
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => handleCancelBooking(booking.id)}
-                                                disabled={cancelBooking.isPending}
+                                                onClick={() => openCancelModal(booking)}
                                                 className="text-red-600 border-red-200 hover:bg-red-50"
                                             >
-                                                {cancelBooking.isPending ? 'Cancelling...' : 'Cancel Booking'}
+                                                <X className="h-4 w-4 mr-1" />
+                                                Cancel
                                             </Button>
                                         )}
 
-                                        <Button variant="outline" size="sm">
+                                        <Button variant="outline" size="sm" onClick={() => openDetailsModal(booking)}>
+                                            <Eye className="h-4 w-4 mr-1" />
                                             View Details
                                         </Button>
                                     </div>
@@ -246,6 +294,207 @@ const Bookings = () => {
                         ))}
                     </div>
                 )}
+
+                {/* Cancel Confirmation Modal */}
+                <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-red-500" />
+                                Cancel Booking
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <p className="text-gray-600 mb-4">
+                                Are you sure you want to cancel this booking? This action cannot be undone.
+                            </p>
+                            {selectedBooking && (
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="font-medium">{selectedBooking.bike.title}</p>
+                                    <p className="text-sm text-gray-600">
+                                        {formatDateTime(selectedBooking.start_time)} -{' '}
+                                        {formatDateTime(selectedBooking.end_time)}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                        Total: ${parseFloat(selectedBooking.total_price).toFixed(2)}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <DialogFooter className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowCancelModal(false)}
+                                disabled={cancelBooking.isPending}
+                            >
+                                Keep Booking
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleCancelBooking}
+                                disabled={cancelBooking.isPending}
+                            >
+                                {cancelBooking.isPending ? (
+                                    <>
+                                        <Loader className="h-4 w-4 mr-2 animate-spin" />
+                                        Cancelling...
+                                    </>
+                                ) : (
+                                    'Cancel Booking'
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Booking Details Modal */}
+                <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
+                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>Booking Details</DialogTitle>
+                        </DialogHeader>
+                        {selectedBooking && (
+                            <div className="space-y-6">
+                                {/* Bike Information */}
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Bike Information</h3>
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        <div className="flex items-start gap-4">
+                                            {selectedBooking.bike.images && selectedBooking.bike.images.length > 0 && (
+                                                <img
+                                                    src={
+                                                        selectedBooking.bike.images[0].image_url ||
+                                                        selectedBooking.bike.images[0].image
+                                                    }
+                                                    alt={selectedBooking.bike.title}
+                                                    className="w-20 h-20 rounded-lg object-cover"
+                                                />
+                                            )}
+                                            <div className="flex-1">
+                                                <h4 className="font-medium">{selectedBooking.bike.title}</h4>
+                                                <div className="flex items-center text-gray-600 mt-1">
+                                                    <MapPin className="h-4 w-4 mr-1" />
+                                                    {selectedBooking.bike.location}
+                                                </div>
+                                                <p className="text-sm text-gray-600 mt-2">
+                                                    {selectedBooking.bike.description}
+                                                </p>
+                                                <div className="flex gap-4 mt-2 text-sm text-gray-600">
+                                                    <span>Daily Rate: ${selectedBooking.bike.daily_rate}</span>
+                                                    {selectedBooking.bike.hourly_rate && (
+                                                        <span>Hourly Rate: ${selectedBooking.bike.hourly_rate}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Booking Information */}
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Booking Information</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="bg-gray-50 p-3 rounded-lg">
+                                            <p className="text-sm font-medium text-gray-700">Booking ID</p>
+                                            <p className="font-semibold">#{selectedBooking.id}</p>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg">
+                                            <p className="text-sm font-medium text-gray-700">Status</p>
+                                            <Badge className={getStatusColor(selectedBooking.status)}>
+                                                {selectedBooking.status.charAt(0).toUpperCase() +
+                                                    selectedBooking.status.slice(1)}
+                                            </Badge>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg">
+                                            <p className="text-sm font-medium text-gray-700">Start Time</p>
+                                            <p className="font-semibold">
+                                                {formatDateTime(selectedBooking.start_time)}
+                                            </p>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg">
+                                            <p className="text-sm font-medium text-gray-700">End Time</p>
+                                            <p className="font-semibold">{formatDateTime(selectedBooking.end_time)}</p>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg">
+                                            <p className="text-sm font-medium text-gray-700">Total Price</p>
+                                            <p className="font-semibold text-lg">
+                                                ${parseFloat(selectedBooking.total_price).toFixed(2)}
+                                            </p>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg">
+                                            <p className="text-sm font-medium text-gray-700">Created At</p>
+                                            <p className="font-semibold">
+                                                {formatDateTime(selectedBooking.created_at)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Contact Information */}
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">
+                                        {activeTab === 'my-bookings' ? 'Bike Owner' : 'Renter'} Contact
+                                    </h3>
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        {activeTab === 'my-bookings' ? (
+                                            <div>
+                                                <p className="font-medium">
+                                                    {selectedBooking.bike.owner.first_name}{' '}
+                                                    {selectedBooking.bike.owner.last_name}
+                                                </p>
+                                                <p className="text-gray-600">{selectedBooking.bike.owner.email}</p>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <p className="font-medium">
+                                                    {selectedBooking.renter.first_name}{' '}
+                                                    {selectedBooking.renter.last_name}
+                                                </p>
+                                                <p className="text-gray-600">{selectedBooking.renter.email}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons in Modal */}
+                                <div className="flex justify-between pt-4 border-t">
+                                    <div className="flex gap-2">
+                                        {canAcceptBooking(selectedBooking) && (
+                                            <Button
+                                                onClick={() => {
+                                                    handleAcceptBooking(selectedBooking.id);
+                                                    setShowDetailsModal(false);
+                                                }}
+                                                disabled={updateBookingStatus.isPending}
+                                                className="bg-green-600 hover:bg-green-700"
+                                            >
+                                                <CheckCircle className="h-4 w-4 mr-2" />
+                                                Accept Booking
+                                            </Button>
+                                        )}
+
+                                        {canCancelBooking(selectedBooking.status) && (
+                                            <Button
+                                                variant="destructive"
+                                                onClick={() => {
+                                                    setShowDetailsModal(false);
+                                                    openCancelModal(selectedBooking);
+                                                }}
+                                            >
+                                                <X className="h-4 w-4 mr-2" />
+                                                Cancel Booking
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    <Button variant="outline" onClick={() => setShowDetailsModal(false)}>
+                                        Close
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     );
