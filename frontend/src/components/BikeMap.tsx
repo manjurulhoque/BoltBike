@@ -13,6 +13,17 @@ const BikeMap = ({ bikes }: BikeMapProps) => {
     const [selectedBike, setSelectedBike] = useState<Bike | null>(null);
     const [mapToken, setMapToken] = useState('');
 
+    bikes.map((bike) => {
+        if (bike.images.length === 0) {
+            bike.images = [
+                {
+                    image_url: '/placeholder.svg',
+                    alt_text: 'Placeholder image',
+                },
+            ];
+        }
+    });
+
     // Sample coordinates for demo purposes
     const bikeLocations = {
         'Downtown, San Francisco': [37.7749, -122.4194],

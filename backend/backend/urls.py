@@ -30,6 +30,7 @@ urlpatterns = [
                 path("bikes/", include("bikes.urls")),
                 path("bookings/", include("bookings.urls")),
                 path("favorites/", include("favorites.urls")),
+                path("ratings/", include("ratings.urls")),
             ]
         ),
     ),
