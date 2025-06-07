@@ -13,6 +13,7 @@ import EditBike from './pages/EditBike';
 import MyBikes from './pages/MyBikes';
 import Bookings from './pages/Bookings';
 import Reviews from './pages/Reviews';
+import Favorites from './pages/Favorites';
 import Map from './pages/Map';
 import NotFound from './pages/NotFound';
 import Home from './pages/Home';
@@ -102,6 +103,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <Reviews />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/favorites"
+                            element={
+                                <ProtectedRoute>
+                                    <Favorites />
                                 </ProtectedRoute>
                             }
                         />
