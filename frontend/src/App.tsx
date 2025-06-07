@@ -109,7 +109,7 @@ function App() {
                     </Routes>
                 </Router>
             </SearchProvider>
-            <Toaster position="top-right" />
+            <Toaster position="top-right" closeButton={true} />
         </QueryClientProvider>
     );
 }
