@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { getBikeTypeLabel } from '@/lib/constants';
 import { Bike } from '@/lib/types/bike';
 import BookingProcess from './BookingProcess';
-import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
+import { useToggleFavorite } from '@/hooks/useFavorites';
 import { useBikeRatingStats } from '@/hooks/useRatings';
 import { toast } from 'sonner';
 
@@ -15,12 +15,12 @@ interface BikeCardProps {
 }
 
 const BikeCard = ({ bike }: BikeCardProps) => {
-    const { id, title, location, daily_rate, hourly_rate, battery_range, bike_type, status, images } = bike;
+    const { id, title, location, daily_rate, hourly_rate, battery_range, bike_type, status, images, is_favorited } =
+        bike;
     const [showBookingProcess, setShowBookingProcess] = useState(false);
 
-    // Fetch favorite status
-    const { data: favoriteResponse } = useIsFavorite(id);
-    const isFavorite = favoriteResponse?.data?.is_favorite || false;
+    // Use favorite status from bike object (no separate API call needed)
+    const isFavorite = is_favorited || false;
 
     // Fetch rating statistics
     const { data: ratingStatsResponse } = useBikeRatingStats(id);

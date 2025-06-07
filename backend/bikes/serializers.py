@@ -38,6 +38,7 @@ class BikeSerializer(serializers.ModelSerializer):
 
     owner = UserSerializer(read_only=True)
     images = BikeImageSerializer(many=True, read_only=True)
+    is_favorited = serializers.SerializerMethodField()
     image_files = serializers.ListField(
         child=serializers.ImageField(),
         write_only=True,
@@ -71,6 +72,7 @@ class BikeSerializer(serializers.ModelSerializer):
             "weight",
             "features",
             "images",
+            "is_favorited",
             "image_files",
             "delete_image_ids",
             "primary_image_id",
@@ -79,6 +81,13 @@ class BikeSerializer(serializers.ModelSerializer):
             "updated_at",
         )
         read_only_fields = ("id", "created_at", "updated_at")
+
+    def get_is_favorited(self, obj):
+        """Check if the current user has favorited this bike."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.favorited_by.filter(user=request.user).exists()
+        return False
 
     def validate_features(self, value):
         """Ensure features is a list."""

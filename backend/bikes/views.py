@@ -37,7 +37,10 @@ class BikeListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         """Get bikes based on query parameters."""
-        queryset = Bike.objects.all()
+        queryset = Bike.objects.select_related('owner').prefetch_related(
+            'images',
+            'favorited_by'
+        )
 
         # Filter by owner if requested
         owner = self.request.query_params.get("owner")
@@ -130,7 +133,10 @@ class BikeDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        return Bike.objects.all()
+        return Bike.objects.select_related('owner').prefetch_related(
+            'images',
+            'favorited_by'
+        )
 
     def get_permissions(self):
         """Only the owner can update or delete their bike."""
@@ -199,7 +205,10 @@ class MyBikesAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Bike.objects.filter(owner=self.request.user)
+        return Bike.objects.filter(owner=self.request.user).select_related('owner').prefetch_related(
+            'images',
+            'favorited_by'
+        )
 
     def list(self, request, *args, **kwargs):
         """Override list method to use custom response format."""
