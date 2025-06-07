@@ -31,7 +31,7 @@ const RatingsList = ({ bikeId, bikeTitle, showStats = true, maxDisplay }: Rating
     }
 
     const ratingsData = ratingsResponse?.data;
-    const ratings = ratingsData?.ratings || [];
+    const ratings = ratingsData?.ratings?.results || [];
     const statistics = ratingsData?.statistics || statsResponse?.data?.statistics;
 
     const displayRatings = maxDisplay ? ratings.slice(0, maxDisplay) : ratings;

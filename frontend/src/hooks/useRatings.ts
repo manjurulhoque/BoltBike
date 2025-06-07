@@ -5,6 +5,7 @@ import {
     UpdateRatingData,
     RatingFilters,
     BikeRatingStats,
+    BikeRatingsResponse,
     RateableBooking,
 } from '@/lib/types/rating';
 import { APIResponse, PaginatedAPIResponse } from '@/lib/types/api';
@@ -54,8 +55,8 @@ const ratingApi = {
     },
 
     // Get ratings for a specific bike
-    getBikeRatings: async (bikeId: number): Promise<APIResponse<{ ratings: Rating[]; statistics: any }>> => {
-        return await apiRequest<APIResponse<{ ratings: Rating[]; statistics: any }>>(`/ratings/bikes/${bikeId}/`);
+    getBikeRatings: async (bikeId: number): Promise<APIResponse<BikeRatingsResponse>> => {
+        return await apiRequest<APIResponse<BikeRatingsResponse>>(`/ratings/bikes/${bikeId}/`);
     },
 
     // Get rating statistics for a specific bike
