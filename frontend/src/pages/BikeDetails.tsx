@@ -29,8 +29,10 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Header from '@/components/Header';
 import BookingProcess from '@/components/BookingProcess';
+import RatingsList from '@/components/RatingsList';
 import { useBike } from '@/hooks/useBikes';
 import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
+import { useBikeRatingStats } from '@/hooks/useRatings';
 import { getBikeTypeLabel } from '@/lib/constants/bike';
 import { toast } from 'sonner';
 
@@ -51,6 +53,10 @@ const BikeDetails = () => {
     // Fetch favorite status
     const { data: favoriteResponse } = useIsFavorite(bikeId);
     const isFavorite = favoriteResponse?.data?.is_favorite || false;
+
+    // Fetch rating statistics
+    const { data: ratingStatsResponse } = useBikeRatingStats(bikeId, !!bike);
+    const ratingStats = ratingStatsResponse?.data?.statistics;
 
     // Toggle favorite mutation
     const toggleFavoriteMutation = useToggleFavorite();
@@ -121,15 +127,15 @@ const BikeDetails = () => {
         setShowShareModal(false);
     };
 
-    // Set default values for missing properties
-    const rating = 4.5; // Default rating
-    const reviewsCount = 0; // Default reviews count
+    // Use actual rating data or fallback
+    const rating = ratingStats?.average_rating || 0;
+    const reviewsCount = ratingStats?.total_ratings || 0;
     const hostName =
         bike.owner?.first_name && bike.owner?.last_name
             ? `${bike.owner.first_name} ${bike.owner.last_name}`
             : 'Bike Owner';
     const hostImage = '/placeholder.svg'; // Default placeholder
-    const pricePerDay = bike.daily_rate || 45; // Use daily_rate from API
+    const pricePerDay = bike.daily_rate || 45;
 
     return (
         <div className="min-h-screen bg-white">
@@ -147,11 +153,13 @@ const BikeDetails = () => {
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <Badge className="bg-rose-500">{getBikeTypeLabel(bike.bike_type)}</Badge>
-                            <div className="flex items-center">
-                                <Star className="h-4 w-4 fill-current text-yellow-400" />
-                                <span className="ml-1 font-medium">{rating}</span>
-                                <span className="text-gray-600 ml-1">({reviewsCount} reviews)</span>
-                            </div>
+                            {reviewsCount > 0 && (
+                                <div className="flex items-center">
+                                    <Star className="h-4 w-4 fill-current text-yellow-400" />
+                                    <span className="ml-1 font-medium">{rating.toFixed(1)}</span>
+                                    <span className="text-gray-600 ml-1">({reviewsCount} reviews)</span>
+                                </div>
+                            )}
                         </div>
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">{bike.title}</h1>
                         <p className="text-gray-600 flex items-center">
@@ -296,6 +304,11 @@ const BikeDetails = () => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Reviews Section */}
+                        <div className="mb-8">
+                            <RatingsList bikeId={bikeId} bikeTitle={bike.title} maxDisplay={5} />
+                        </div>
                     </div>
 
                     {/* Right Column - Booking Card */}
@@ -307,10 +320,12 @@ const BikeDetails = () => {
                                         <span className="text-2xl font-bold">${pricePerDay}</span>
                                         <span className="text-gray-600"> / day</span>
                                     </div>
-                                    <div className="flex items-center">
-                                        <Star className="h-4 w-4 fill-current text-yellow-400" />
-                                        <span className="ml-1 font-medium">{rating}</span>
-                                    </div>
+                                    {reviewsCount > 0 && (
+                                        <div className="flex items-center">
+                                            <Star className="h-4 w-4 fill-current text-yellow-400" />
+                                            <span className="ml-1 font-medium">{rating.toFixed(1)}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-4 mb-6">
@@ -336,18 +351,15 @@ const BikeDetails = () => {
                                     </div>
 
                                     <div>
-                                        <Label htmlFor="guests">Riders</Label>
-                                        <select
+                                        <Label htmlFor="guests">Guests</Label>
+                                        <Input
                                             id="guests"
+                                            type="number"
+                                            min="1"
+                                            max="4"
                                             value={guests}
-                                            onChange={(e) => setGuests(Number(e.target.value))}
-                                            className="w-full p-2 border border-gray-300 rounded-md"
-                                        >
-                                            <option value={1}>1 rider</option>
-                                            <option value={2}>2 riders</option>
-                                            <option value={3}>3 riders</option>
-                                            <option value={4}>4 riders</option>
-                                        </select>
+                                            onChange={(e) => setGuests(parseInt(e.target.value))}
+                                        />
                                     </div>
                                 </div>
 
@@ -355,46 +367,31 @@ const BikeDetails = () => {
                                     className="w-full bg-rose-500 hover:bg-rose-600 mb-4"
                                     onClick={() => setShowBookingProcess(true)}
                                 >
-                                    Book Now
+                                    Reserve
                                 </Button>
 
-                                <p className="text-center text-sm text-gray-600 mb-4">You won't be charged yet</p>
-
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span>${pricePerDay} x 3 days</span>
-                                        <span>${pricePerDay * 3}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>Service fee</span>
-                                        <span>$15</span>
-                                    </div>
-                                    <hr className="my-2" />
-                                    <div className="flex justify-between font-semibold">
-                                        <span>Total</span>
-                                        <span>${pricePerDay * 3 + 15}</span>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 space-y-2">
-                                    <div className="flex items-center text-sm text-gray-600">
-                                        <Shield className="h-4 w-4 mr-2 text-green-600" />
-                                        <span>Free cancellation</span>
-                                    </div>
-                                    <div className="flex items-center text-sm text-gray-600">
-                                        <Clock className="h-4 w-4 mr-2 text-green-600" />
-                                        <span>Instant booking</span>
-                                    </div>
-                                    <div className="flex items-center text-sm text-gray-600">
-                                        <Shield className="h-4 w-4 mr-2 text-green-600" />
-                                        <span>Insurance included</span>
-                                    </div>
-                                </div>
+                                <p className="text-center text-sm text-gray-600">You won't be charged yet</p>
                             </CardContent>
                         </Card>
                     </div>
                 </div>
             </div>
+
+            {/* Booking Process Modal */}
+            {showBookingProcess && (
+                <BookingProcess
+                    bikeId={bikeId}
+                    bikeTitle={bike.title}
+                    hourlyRate={bike.hourly_rate}
+                    dailyRate={bike.daily_rate}
+                    onClose={() => setShowBookingProcess(false)}
+                    onSuccess={(bookingId) => {
+                        setShowBookingProcess(false);
+                        // Handle successful booking
+                        toast.success('Booking request submitted successfully!');
+                    }}
+                />
+            )}
 
             {/* Share Modal */}
             <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
@@ -438,22 +435,6 @@ const BikeDetails = () => {
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* Booking Process Modal */}
-            {showBookingProcess && (
-                <BookingProcess
-                    bikeId={bike.id}
-                    bikeTitle={bike.title}
-                    hourlyRate={bike.hourly_rate}
-                    dailyRate={bike.daily_rate}
-                    onClose={() => setShowBookingProcess(false)}
-                    onSuccess={(bookingId) => {
-                        console.log('Booking created with ID:', bookingId);
-                        setShowBookingProcess(false);
-                        toast.success('Booking created successfully!');
-                    }}
-                />
-            )}
         </div>
     );
 };

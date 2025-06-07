@@ -4,20 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useCreateRating } from '@/hooks/useRatings';
+import { CreateRatingData } from '@/lib/types/rating';
 
 interface ReviewFormProps {
-    bikeId: string;
+    bookingId: number;
+    bikeId: number;
     bikeTitle: string;
     onClose: () => void;
     onReviewSubmitted?: () => void;
 }
 
-const ReviewForm = ({ bikeId, bikeTitle, onClose, onReviewSubmitted }: ReviewFormProps) => {
+const ReviewForm = ({ bookingId, bikeId, bikeTitle, onClose, onReviewSubmitted }: ReviewFormProps) => {
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
+    const createRating = useCreateRating();
 
     const handleSubmitReview = async () => {
         if (rating === 0) {
@@ -29,20 +32,29 @@ const ReviewForm = ({ bikeId, bikeTitle, onClose, onReviewSubmitted }: ReviewFor
             return;
         }
 
-        setIsSubmitting(true);
+        if (comment.length > 500) {
+            toast({
+                title: 'Comment Too Long',
+                description: 'Please keep your comment under 500 characters.',
+                variant: 'destructive',
+            });
+            return;
+        }
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const ratingData: CreateRatingData = {
+            booking: bookingId,
+            rating,
+            comment: comment.trim() || undefined,
+        };
 
-        setIsSubmitting(false);
-
-        toast({
-            title: 'Review Submitted!',
-            description: 'Thank you for your feedback. Your review has been submitted successfully.',
-        });
-
-        onReviewSubmitted?.();
-        onClose();
+        try {
+            await createRating.mutateAsync(ratingData);
+            onReviewSubmitted?.();
+            onClose();
+        } catch (error) {
+            // Error handling is done in the mutation's onError callback
+            console.error('Failed to submit rating:', error);
+        }
     };
 
     return (
@@ -61,7 +73,7 @@ const ReviewForm = ({ bikeId, bikeTitle, onClose, onReviewSubmitted }: ReviewFor
                 <CardContent className="space-y-6">
                     {/* Rating Stars */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Rating</label>
+                        <label className="text-sm font-medium">Rating *</label>
                         <div className="flex items-center space-x-1">
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <button
@@ -71,24 +83,27 @@ const ReviewForm = ({ bikeId, bikeTitle, onClose, onReviewSubmitted }: ReviewFor
                                     onMouseEnter={() => setHoverRating(star)}
                                     onMouseLeave={() => setHoverRating(0)}
                                     className="focus:outline-none"
+                                    disabled={createRating.isPending}
                                 >
                                     <Star
                                         className={`h-8 w-8 ${
                                             star <= (hoverRating || rating)
                                                 ? 'fill-yellow-400 text-yellow-400'
                                                 : 'text-gray-300'
-                                        } transition-colors`}
+                                        } transition-colors ${
+                                            createRating.isPending ? 'opacity-50' : 'hover:scale-110'
+                                        }`}
                                     />
                                 </button>
                             ))}
                         </div>
                         {rating > 0 && (
                             <p className="text-sm text-gray-600">
-                                {rating === 1 && 'Poor'}
-                                {rating === 2 && 'Fair'}
-                                {rating === 3 && 'Good'}
-                                {rating === 4 && 'Very Good'}
-                                {rating === 5 && 'Excellent'}
+                                {rating === 1 && 'Poor - Not satisfied'}
+                                {rating === 2 && 'Fair - Below expectations'}
+                                {rating === 3 && 'Good - Met expectations'}
+                                {rating === 4 && 'Very Good - Exceeded expectations'}
+                                {rating === 5 && 'Excellent - Outstanding experience'}
                             </p>
                         )}
                     </div>
@@ -102,25 +117,39 @@ const ReviewForm = ({ bikeId, bikeTitle, onClose, onReviewSubmitted }: ReviewFor
                             onChange={(e) => setComment(e.target.value)}
                             rows={4}
                             className="resize-none"
+                            disabled={createRating.isPending}
+                            maxLength={500}
                         />
-                        <p className="text-xs text-gray-500">{comment.length}/500 characters</p>
+                        <p className={`text-xs ${comment.length > 450 ? 'text-orange-500' : 'text-gray-500'}`}>
+                            {comment.length}/500 characters
+                        </p>
                     </div>
 
-                    {/* Submit Button */}
-                    <Button
-                        onClick={handleSubmitReview}
-                        className="w-full bg-rose-500 hover:bg-rose-600"
-                        disabled={isSubmitting || rating === 0}
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <Loader className="h-4 w-4 mr-2 animate-spin" />
-                                Submitting...
-                            </>
-                        ) : (
-                            'Submit Review'
-                        )}
-                    </Button>
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={onClose}
+                            className="flex-1"
+                            disabled={createRating.isPending}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSubmitReview}
+                            className="flex-1 bg-rose-500 hover:bg-rose-600"
+                            disabled={createRating.isPending || rating === 0}
+                        >
+                            {createRating.isPending ? (
+                                <>
+                                    <Loader className="h-4 w-4 mr-2 animate-spin" />
+                                    Submitting...
+                                </>
+                            ) : (
+                                'Submit Review'
+                            )}
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -1,4 +1,4 @@
-import { Search, Menu, User, Heart, Globe, Map, Calendar } from 'lucide-react';
+import { Search, Menu, User, Heart, Globe, Map, Calendar, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,6 +109,12 @@ const Header = () => {
                                             <Link to="/bookings">
                                                 <Button variant="ghost" className="text-sm font-medium">
                                                     Bookings
+                                                </Button>
+                                            </Link>
+                                            <Link to="/reviews">
+                                                <Button variant="ghost" className="text-sm font-medium">
+                                                    <Star className="h-4 w-4 mr-1" />
+                                                    Reviews
                                                 </Button>
                                             </Link>
                                             <Link to="/dashboard">
