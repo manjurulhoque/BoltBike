@@ -10,9 +10,11 @@ import {
     DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Slider } from '@/components/ui/slider';
+import { useFilter } from '@/contexts/FilterContext';
 
 const FilterBar = () => {
-    const bikeTypes = ['Mountain', 'City', 'Cargo', 'Folding', 'Road'];
+    const { filterState, toggleBikeType, updateFilterState } = useFilter();
+    const bikeTypes = ['mountain', 'city', 'cargo', 'folding', 'road'];
 
     return (
         <div className="sticky top-16 z-40 bg-white border-b py-4">
@@ -23,10 +25,15 @@ const FilterBar = () => {
                         {bikeTypes.map((type) => (
                             <Badge
                                 key={type}
-                                variant="outline"
-                                className="cursor-pointer hover:bg-rose-50 hover:border-rose-300 whitespace-nowrap"
+                                variant={filterState.selectedTypes.includes(type) ? 'default' : 'outline'}
+                                className={`cursor-pointer whitespace-nowrap transition-colors ${
+                                    filterState.selectedTypes.includes(type)
+                                        ? 'bg-rose-500 text-white hover:bg-rose-600'
+                                        : 'hover:bg-rose-50 hover:border-rose-300'
+                                }`}
+                                onClick={() => toggleBikeType(type)}
                             >
-                                {type}
+                                {type.charAt(0).toUpperCase() + type.slice(1)}
                             </Badge>
                         ))}
                     </div>
@@ -44,10 +51,19 @@ const FilterBar = () => {
                                 <DropdownMenuLabel>Price Range per Day</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <div className="space-y-4">
-                                    <Slider defaultValue={[20, 100]} max={200} min={10} step={5} className="w-full" />
+                                    <Slider
+                                        value={filterState.priceRange}
+                                        onValueChange={(value) =>
+                                            updateFilterState({ priceRange: value as [number, number] })
+                                        }
+                                        max={200}
+                                        min={10}
+                                        step={5}
+                                        className="w-full"
+                                    />
                                     <div className="flex justify-between text-sm text-gray-600">
-                                        <span>$10</span>
-                                        <span>$200+</span>
+                                        <span>${filterState.priceRange[0]}</span>
+                                        <span>${filterState.priceRange[1]}+</span>
                                     </div>
                                 </div>
                             </DropdownMenuContent>
@@ -58,7 +74,11 @@ const FilterBar = () => {
                             <span>Filters</span>
                         </Button>
 
-                        <Button variant="outline" className="flex items-center space-x-2">
+                        <Button
+                            variant={filterState.showMap ? 'default' : 'outline'}
+                            className="flex items-center space-x-2"
+                            onClick={() => updateFilterState({ showMap: !filterState.showMap })}
+                        >
                             <MapPin className="h-4 w-4" />
                             <span>Map</span>
                         </Button>
