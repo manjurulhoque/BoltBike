@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import BikeCard from './BikeCard';
 import { Button } from './ui/button';
@@ -15,19 +15,32 @@ const BikeGrid = () => {
                 <p className="text-gray-600">{bikes.length} e-bikes available for your dates</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {bikes.map((bike) => (
-                    <BikeCard key={bike.id} bike={bike} />
-                ))}
-            </div>
-            <div className="flex justify-center">
-                <Button variant="outline" size="sm" asChild className="mt-20">
-                    <Link to="/bikes">
-                        <ArrowRight className="h-4 w-4" />
-                        View all bikes
-                    </Link>
-                </Button>
-            </div>
+            {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                    <Loader className="h-8 w-8 animate-spin text-gray-500" />
+                    <span className="ml-2 text-gray-500">Loading bikes...</span>
+                </div>
+            ) : error ? (
+                <div className="text-center py-12">
+                    <p className="text-red-500">Error loading bikes. Please try again.</p>
+                </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {bikes.map((bike) => (
+                            <BikeCard key={bike.id} bike={bike} />
+                        ))}
+                    </div>
+                    <div className="flex justify-center">
+                        <Button variant="outline" size="sm" asChild className="mt-20">
+                            <Link to="/bikes">
+                                <ArrowRight className="h-4 w-4" />
+                                View all bikes
+                            </Link>
+                        </Button>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
