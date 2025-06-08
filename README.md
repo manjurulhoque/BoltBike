@@ -2,6 +2,27 @@
 
 A comprehensive peer-to-peer e-bike rental platform built with Django REST Framework and React. This platform allows users to list their e-bikes for rent and discover available e-bikes in their area.
 
+**Connect bike owners with renters in a seamless, user-friendly marketplace that makes e-bike sharing accessible to everyone.**
+
+## 📸 Screenshots
+
+### Home Page
+![Home Page](screenshots/home.png)
+
+### Bike Details & Booking
+![Bike Details](screenshots/bike-details.png)
+![Booking Process](screenshots/booking-process.png)
+
+### Dashboard & Management
+![My Rentals](screenshots/my-rentals.png)
+![Edit Bike](screenshots/edit-bike.png)
+![My Favorites](screenshots/my-favorites.png)
+
+### Bookings & Reviews
+![Booking Details](screenshots/booking-details.png)
+![Accept Booking](screenshots/accept-booking-as-owner.png)
+![Reviews and Ratings](screenshots/reviews-and-ratings.png)
+
 ## ✨ Features
 
 ### 🚴‍♂️ For Bike Owners

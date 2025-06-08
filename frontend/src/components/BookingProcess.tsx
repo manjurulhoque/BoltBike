@@ -216,6 +216,7 @@ const BookingProcess = ({ bikeId, bikeTitle, hourlyRate, dailyRate, onClose, onS
                                         id="startDate"
                                         type="date"
                                         value={bookingData.startDate}
+                                        min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                                         onChange={(e) => handleInputChange('startDate', e.target.value)}
                                     />
                                 </div>
@@ -225,6 +226,10 @@ const BookingProcess = ({ bikeId, bikeTitle, hourlyRate, dailyRate, onClose, onS
                                         id="endDate"
                                         type="date"
                                         value={bookingData.endDate}
+                                        min={
+                                            bookingData.startDate ||
+                                            new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                                        }
                                         onChange={(e) => handleInputChange('endDate', e.target.value)}
                                     />
                                 </div>
