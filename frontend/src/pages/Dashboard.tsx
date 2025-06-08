@@ -19,76 +19,100 @@ import { Card } from '@/components/ui/card';
 import { useLogout, useUser } from '@/hooks/auth/useAuth';
 import { Link } from 'react-router-dom';
 import { useMyBikes } from '@/hooks/useBikes';
+import { useMyBookings, useBikeBookings } from '@/hooks/useBookings';
+import { useFavorites } from '@/hooks/useFavorites';
+import { getBikeTypeLabel } from '@/lib/constants';
 import BikeCard from '@/components/BikeCard';
 import DashboardBikeCard from '@/components/DashboardBikeCard';
+import { format } from 'date-fns';
 
 const Dashboard = () => {
     const { data: myBikesResponse } = useMyBikes();
     const { data: user, isLoading } = useUser();
+    const { data: myBookingsResponse } = useMyBookings();
+    const { data: bikeBookingsResponse } = useBikeBookings();
+    const { data: favoritesResponse } = useFavorites();
     const [activeTab, setActiveTab] = useState('bookings');
     const logout = useLogout();
     const { first_name, last_name, email, phone } = user || {};
     const myBikes = myBikesResponse?.data?.results || [];
+    const myBookings = myBookingsResponse?.data?.results || [];
+    const bikeBookings = bikeBookingsResponse?.data?.results || [];
+    const favorites = favoritesResponse?.data?.results || [];
 
-    const bookings = [
-        {
-            id: '1',
-            bikeTitle: 'Trek Verve+ 2 Electric Hybrid',
-            location: 'Downtown, San Francisco',
-            startDate: '2024-06-15',
-            endDate: '2024-06-17',
-            price: 135,
-            status: 'confirmed',
-            image: '/placeholder.svg',
-        },
-        {
-            id: '2',
-            bikeTitle: 'Specialized Turbo Vado SL',
-            location: 'Mission District, SF',
-            startDate: '2024-06-20',
-            endDate: '2024-06-22',
-            price: 195,
-            status: 'pending',
-            image: '/placeholder.svg',
-        },
-    ];
+    // Calculate earnings from bike bookings (bookings for bikes I own)
+    const calculateEarnings = () => {
+        const completedBookings = bikeBookings.filter((booking) => booking.status === 'completed');
+        const pendingBookings = bikeBookings.filter((booking) => booking.status === 'active');
 
-    const favorites = [
-        {
-            id: '1',
-            title: 'Canyon Neuron:ON Mountain',
-            location: 'Marin County, CA',
-            price: 85,
-            rating: 4.9,
-            image: '/placeholder.svg',
-        },
-        {
-            id: '2',
-            title: 'Brompton Electric Folding',
-            location: 'SOMA, San Francisco',
-            price: 55,
-            rating: 4.6,
-            image: '/placeholder.svg',
-        },
-    ];
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-    const earnings = {
-        thisMonth: 1240,
-        lastMonth: 890,
-        totalEarnings: 5680,
-        pendingPayouts: 320,
-        recentTransactions: [
-            { id: '1', date: '2024-06-15', amount: 135, bike: 'Trek Verve+ 2', renter: 'John D.', status: 'completed' },
-            { id: '2', date: '2024-06-18', amount: 85, bike: 'Canyon Neuron', renter: 'Sarah M.', status: 'completed' },
-            {
-                id: '3',
-                date: '2024-06-20',
-                amount: 195,
-                bike: 'Specialized Turbo',
-                renter: 'Mike R.',
-                status: 'pending',
-            },
-        ],
+        const thisMonthEarnings = completedBookings
+            .filter((booking) => {
+                const bookingDate = new Date(booking.end_time);
+                return bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear;
+            })
+            .reduce((sum, booking) => sum + parseFloat(booking.total_price), 0);
+
+        const lastMonthEarnings = completedBookings
+            .filter((booking) => {
+                const bookingDate = new Date(booking.end_time);
+                return bookingDate.getMonth() === lastMonth && bookingDate.getFullYear() === lastMonthYear;
+            })
+            .reduce((sum, booking) => sum + parseFloat(booking.total_price), 0);
+
+        const totalEarnings = completedBookings.reduce((sum, booking) => sum + parseFloat(booking.total_price), 0);
+
+        const pendingPayouts = pendingBookings.reduce((sum, booking) => sum + parseFloat(booking.total_price), 0);
+
+        // Recent transactions (last 5 completed bookings)
+        const recentTransactions = completedBookings.slice(0, 5).map((booking) => ({
+            id: booking.id.toString(),
+            date: format(new Date(booking.end_time), 'yyyy-MM-dd'),
+            amount: parseFloat(booking.total_price),
+            bike: booking.bike.title,
+            renter: `${booking.renter.first_name} ${booking.renter.last_name.charAt(0)}.`,
+            status: 'completed' as const,
+        }));
+
+        return {
+            thisMonth: thisMonthEarnings,
+            lastMonth: lastMonthEarnings,
+            totalEarnings,
+            pendingPayouts,
+            recentTransactions,
+        };
+    };
+
+    const earnings = calculateEarnings();
+
+    // Format date helper
+    const formatBookingDate = (dateString: string) => {
+        return format(new Date(dateString), 'yyyy-MM-dd');
+    };
+
+    // Get status badge styling
+    const getStatusBadgeStyle = (status: string) => {
+        switch (status) {
+            case 'confirmed':
+            case 'approved':
+                return 'bg-green-100 text-green-800';
+            case 'pending':
+            case 'requested':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'active':
+                return 'bg-blue-100 text-blue-800';
+            case 'completed':
+                return 'bg-gray-100 text-gray-800';
+            case 'cancelled':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
     };
 
     return (
@@ -207,80 +231,106 @@ const Dashboard = () => {
                         {activeTab === 'bookings' && (
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 mb-6">My Bookings</h2>
-                                <div className="space-y-4">
-                                    {bookings.map((booking) => (
-                                        <Card key={booking.id} className="p-6">
-                                            <div className="flex items-center space-x-4">
-                                                <img
-                                                    src={booking.image}
-                                                    alt={booking.bikeTitle}
-                                                    className="w-20 h-20 rounded-lg object-cover"
-                                                />
-                                                <div className="flex-1">
-                                                    <h3 className="text-lg font-semibold text-gray-900">
-                                                        {booking.bikeTitle}
-                                                    </h3>
-                                                    <p className="text-gray-600 flex items-center">
-                                                        <MapPin className="h-4 w-4 mr-1" />
-                                                        {booking.location}
-                                                    </p>
-                                                    <p className="text-sm text-gray-600 mt-1">
-                                                        {booking.startDate} - {booking.endDate}
-                                                    </p>
+                                {myBookings.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {myBookings.map((booking) => (
+                                            <Card key={booking.id} className="p-6">
+                                                <div className="flex items-center space-x-4">
+                                                    <img
+                                                        src={booking.bike.images?.[0]?.image_url || '/placeholder.svg'}
+                                                        alt={booking.bike.title}
+                                                        className="w-20 h-20 rounded-lg object-cover"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <h3 className="text-lg font-semibold text-gray-900">
+                                                            {booking.bike.title}
+                                                        </h3>
+                                                        <p className="text-gray-600 flex items-center">
+                                                            <MapPin className="h-4 w-4 mr-1" />
+                                                            {booking.bike.location}
+                                                        </p>
+                                                        <p className="text-sm text-gray-600 mt-1">
+                                                            {formatBookingDate(booking.start_time)} -{' '}
+                                                            {formatBookingDate(booking.end_time)}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-xl font-bold text-gray-900">
+                                                            ${booking.total_price}
+                                                        </p>
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className={getStatusBadgeStyle(booking.status)}
+                                                        >
+                                                            {booking.status}
+                                                        </Badge>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-xl font-bold text-gray-900">${booking.price}</p>
-                                                    <Badge
-                                                        variant={
-                                                            booking.status === 'confirmed' ? 'default' : 'secondary'
-                                                        }
-                                                        className={
-                                                            booking.status === 'confirmed'
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-yellow-100 text-yellow-800'
-                                                        }
-                                                    >
-                                                        {booking.status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings yet</h3>
+                                        <p className="text-gray-600 mb-4">
+                                            Start exploring and book your first e-bike rental!
+                                        </p>
+                                        <Button className="bg-rose-500 hover:bg-rose-600">
+                                            <Link to="/">Browse Bikes</Link>
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {activeTab === 'favorites' && (
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Favorite Bikes</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {favorites.map((bike) => (
-                                        <Card key={bike.id} className="overflow-hidden">
-                                            <img
-                                                src={bike.image}
-                                                alt={bike.title}
-                                                className="w-full h-48 object-cover"
-                                            />
-                                            <div className="p-4">
-                                                <h3 className="font-semibold text-gray-900 mb-2">{bike.title}</h3>
-                                                <p className="text-gray-600 flex items-center mb-2">
-                                                    <MapPin className="h-4 w-4 mr-1" />
-                                                    {bike.location}
-                                                </p>
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center">
-                                                        <Star className="h-4 w-4 fill-current text-yellow-400" />
-                                                        <span className="text-sm font-medium ml-1">{bike.rating}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-semibold">${bike.price}</span>
-                                                        <span className="text-gray-600"> / day</span>
+                                {favorites.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {favorites.map((favorite) => (
+                                            <Card key={favorite.id} className="overflow-hidden">
+                                                <img
+                                                    src={favorite.bike.images?.[0]?.image_url || '/placeholder.svg'}
+                                                    alt={favorite.bike.title}
+                                                    className="w-full h-48 object-cover"
+                                                />
+                                                <div className="p-4">
+                                                    <h3 className="font-semibold text-gray-900 mb-2">
+                                                        {favorite.bike.title}
+                                                    </h3>
+                                                    <p className="text-gray-600 flex items-center mb-2">
+                                                        <MapPin className="h-4 w-4 mr-1" />
+                                                        {favorite.bike.location}
+                                                    </p>
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="text-sm text-gray-600">
+                                                            {getBikeTypeLabel(favorite.bike.bike_type)}
+                                                        </div>
+                                                        <div>
+                                                            <span className="font-semibold">
+                                                                ${favorite.bike.daily_rate}
+                                                            </span>
+                                                            <span className="text-gray-600"> / day</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No favorites yet</h3>
+                                        <p className="text-gray-600 mb-4">
+                                            Save bikes you love to easily find them later!
+                                        </p>
+                                        <Button className="bg-rose-500 hover:bg-rose-600">
+                                            <Link to="/">Browse Bikes</Link>
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -290,7 +340,7 @@ const Dashboard = () => {
                                     <h2 className="text-2xl font-bold text-gray-900">My Bikes</h2>
                                     <Button className="bg-rose-500 hover:bg-rose-600">
                                         <Plus className="h-4 w-4 mr-2" />
-                                        Add New Bike
+                                        <Link to="/list-bike">Add New Bike</Link>
                                     </Button>
                                 </div>
                                 {myBikes.length > 0 ? (
@@ -305,6 +355,11 @@ const Dashboard = () => {
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2">
                                             No bikes listed yet
                                         </h3>
+                                        <p className="text-gray-600 mb-4">List your first bike and start earning!</p>
+                                        <Button className="bg-rose-500 hover:bg-rose-600">
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            <Link to="/list-bike">Add Your First Bike</Link>
+                                        </Button>
                                     </div>
                                 )}
                             </div>
@@ -321,7 +376,7 @@ const Dashboard = () => {
                                             <div>
                                                 <p className="text-sm font-medium text-gray-600">This Month</p>
                                                 <p className="text-2xl font-bold text-gray-900">
-                                                    ${earnings.thisMonth}
+                                                    ${earnings.thisMonth.toFixed(2)}
                                                 </p>
                                             </div>
                                             <div className="p-3 bg-green-100 rounded-full">
@@ -329,8 +384,30 @@ const Dashboard = () => {
                                             </div>
                                         </div>
                                         <div className="mt-2 flex items-center text-sm">
-                                            <span className="text-green-600 font-medium">+39%</span>
-                                            <span className="text-gray-600 ml-1">from last month</span>
+                                            {earnings.lastMonth > 0 ? (
+                                                <>
+                                                    <span
+                                                        className={`font-medium ${
+                                                            earnings.thisMonth > earnings.lastMonth
+                                                                ? 'text-green-600'
+                                                                : 'text-red-600'
+                                                        }`}
+                                                    >
+                                                        {earnings.thisMonth > earnings.lastMonth ? '+' : ''}
+                                                        {earnings.lastMonth > 0
+                                                            ? Math.round(
+                                                                  ((earnings.thisMonth - earnings.lastMonth) /
+                                                                      earnings.lastMonth) *
+                                                                      100,
+                                                              )
+                                                            : 0}
+                                                        %
+                                                    </span>
+                                                    <span className="text-gray-600 ml-1">from last month</span>
+                                                </>
+                                            ) : (
+                                                <span className="text-gray-600">No data from last month</span>
+                                            )}
                                         </div>
                                     </Card>
 
@@ -339,7 +416,7 @@ const Dashboard = () => {
                                             <div>
                                                 <p className="text-sm font-medium text-gray-600">Last Month</p>
                                                 <p className="text-2xl font-bold text-gray-900">
-                                                    ${earnings.lastMonth}
+                                                    ${earnings.lastMonth.toFixed(2)}
                                                 </p>
                                             </div>
                                             <div className="p-3 bg-blue-100 rounded-full">
@@ -353,7 +430,7 @@ const Dashboard = () => {
                                             <div>
                                                 <p className="text-sm font-medium text-gray-600">Total Earnings</p>
                                                 <p className="text-2xl font-bold text-gray-900">
-                                                    ${earnings.totalEarnings}
+                                                    ${earnings.totalEarnings.toFixed(2)}
                                                 </p>
                                             </div>
                                             <div className="p-3 bg-purple-100 rounded-full">
@@ -367,7 +444,7 @@ const Dashboard = () => {
                                             <div>
                                                 <p className="text-sm font-medium text-gray-600">Pending Payouts</p>
                                                 <p className="text-2xl font-bold text-gray-900">
-                                                    ${earnings.pendingPayouts}
+                                                    ${earnings.pendingPayouts.toFixed(2)}
                                                 </p>
                                             </div>
                                             <div className="p-3 bg-orange-100 rounded-full">
@@ -382,48 +459,51 @@ const Dashboard = () => {
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
                                         <Button variant="outline" size="sm">
-                                            View All
+                                            <Link to="/bookings">View All</Link>
                                         </Button>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        {earnings.recentTransactions.map((transaction) => (
-                                            <div
-                                                key={transaction.id}
-                                                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                                            >
-                                                <div className="flex items-center space-x-4">
-                                                    <div className="p-2 bg-white rounded-lg">
-                                                        <Bike className="h-5 w-5 text-gray-600" />
+                                    {earnings.recentTransactions.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {earnings.recentTransactions.map((transaction) => (
+                                                <div
+                                                    key={transaction.id}
+                                                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                                                >
+                                                    <div className="flex items-center space-x-4">
+                                                        <div className="p-2 bg-white rounded-lg">
+                                                            <Bike className="h-5 w-5 text-gray-600" />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-medium text-gray-900">
+                                                                {transaction.bike}
+                                                            </h4>
+                                                            <p className="text-sm text-gray-600">
+                                                                Rented by {transaction.renter}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500">{transaction.date}</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <h4 className="font-medium text-gray-900">
-                                                            {transaction.bike}
-                                                        </h4>
-                                                        <p className="text-sm text-gray-600">
-                                                            Rented by {transaction.renter}
+                                                    <div className="text-right">
+                                                        <p className="font-semibold text-gray-900">
+                                                            ${transaction.amount.toFixed(2)}
                                                         </p>
-                                                        <p className="text-xs text-gray-500">{transaction.date}</p>
+                                                        <Badge
+                                                            variant="default"
+                                                            className="bg-green-100 text-green-800"
+                                                        >
+                                                            {transaction.status}
+                                                        </Badge>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="font-semibold text-gray-900">${transaction.amount}</p>
-                                                    <Badge
-                                                        variant={
-                                                            transaction.status === 'completed' ? 'default' : 'secondary'
-                                                        }
-                                                        className={
-                                                            transaction.status === 'completed'
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-yellow-100 text-yellow-800'
-                                                        }
-                                                    >
-                                                        {transaction.status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8">
+                                            <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                            <p className="text-gray-600">No transactions yet</p>
+                                        </div>
+                                    )}
                                 </Card>
                             </div>
                         )}
@@ -441,7 +521,7 @@ const Dashboard = () => {
                                                 <input
                                                     type="text"
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                                    defaultValue="John"
+                                                    defaultValue={first_name || ''}
                                                 />
                                             </div>
                                             <div>
@@ -451,7 +531,7 @@ const Dashboard = () => {
                                                 <input
                                                     type="text"
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                                    defaultValue="Doe"
+                                                    defaultValue={last_name || ''}
                                                 />
                                             </div>
                                         </div>
@@ -462,7 +542,7 @@ const Dashboard = () => {
                                             <input
                                                 type="email"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                                defaultValue="john.doe@example.com"
+                                                defaultValue={email || ''}
                                             />
                                         </div>
                                         <div>
@@ -472,6 +552,7 @@ const Dashboard = () => {
                                             <input
                                                 type="tel"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                                defaultValue={phone || ''}
                                                 placeholder="+1 (555) 123-4567"
                                             />
                                         </div>
