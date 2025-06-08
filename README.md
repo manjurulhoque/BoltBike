@@ -62,7 +62,7 @@ A comprehensive peer-to-peer e-bike rental platform built with Django REST Frame
 - Shadcn/ui Components
 - React Router
 - TanStack Query
-- Lucide Icons
+- Lucide React Icons
 
 ## Getting Started
 
@@ -71,14 +71,14 @@ A comprehensive peer-to-peer e-bike rental platform built with Django REST Frame
 - Python 3.8+
 - Node.js 16+
 - PostgreSQL
-- Stripe account (for payments)
+- Stripe account (for payments) # not added yet
 
 ### Quick Setup (Recommended)
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd e-bike-rent
+git clone git@github.com:manjurulhoque/BoltBike.git
+cd BoltBike
 ```
 
 2. Run the automated setup script:
@@ -112,7 +112,6 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 2. Install dependencies:
 ```bash
 pip install -r requirements.txt
-pip install django-filter>=23.0 Pillow>=10.0.0
 ```
 
 3. Create and apply migrations:
@@ -150,7 +149,7 @@ npm install
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173`
+The frontend will be available at `http://localhost:3000`
 
 ## 🚀 Usage Guide
 
