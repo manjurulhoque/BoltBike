@@ -51,34 +51,6 @@ export const useAddFavorite = () => {
                 success: true,
                 data: { is_favorite: true },
             });
-
-            // Update is_favorited field in all bike list queries
-            queryClient.setQueriesData({ queryKey: ['bikes'] }, (oldData: any) => {
-                if (!oldData?.data?.results) return oldData;
-
-                return {
-                    ...oldData,
-                    data: {
-                        ...oldData.data,
-                        results: oldData.data.results.map((bike: any) =>
-                            bike.id === variables.bike ? { ...bike, is_favorited: true } : bike,
-                        ),
-                    },
-                };
-            });
-
-            // Update individual bike query if it exists
-            queryClient.setQueryData(['bike', variables.bike], (oldData: any) => {
-                if (!oldData?.data) return oldData;
-
-                return {
-                    ...oldData,
-                    data: {
-                        ...oldData.data,
-                        is_favorited: true,
-                    },
-                };
-            });
         },
         onError: (error: any) => {
             toast.error('Failed to add to favorites');
@@ -103,34 +75,6 @@ export const useRemoveFavorite = () => {
 
             // Update favorite status for this bike
             queryClient.setQueryData(['favorite-status', bikeId], { success: true, data: { is_favorite: false } });
-
-            // Update is_favorited field in all bike list queries
-            queryClient.setQueriesData({ queryKey: ['bikes'] }, (oldData: any) => {
-                if (!oldData?.data?.results) return oldData;
-
-                return {
-                    ...oldData,
-                    data: {
-                        ...oldData.data,
-                        results: oldData.data.results.map((bike: any) =>
-                            bike.id === bikeId ? { ...bike, is_favorited: false } : bike,
-                        ),
-                    },
-                };
-            });
-
-            // Update individual bike query if it exists
-            queryClient.setQueryData(['bike', bikeId], (oldData: any) => {
-                if (!oldData?.data) return oldData;
-
-                return {
-                    ...oldData,
-                    data: {
-                        ...oldData.data,
-                        is_favorited: false,
-                    },
-                };
-            });
         },
         onError: (error: any) => {
             toast.error('Failed to remove from favorites');
@@ -158,34 +102,6 @@ export const useToggleFavorite = () => {
             queryClient.setQueryData(['favorite-status', bikeId], {
                 success: true,
                 data: { is_favorite: isNowFavorite },
-            });
-
-            // Update is_favorited field in all bike list queries
-            queryClient.setQueriesData({ queryKey: ['bikes'] }, (oldData: any) => {
-                if (!oldData?.data?.results) return oldData;
-
-                return {
-                    ...oldData,
-                    data: {
-                        ...oldData.data,
-                        results: oldData.data.results.map((bike: any) =>
-                            bike.id === bikeId ? { ...bike, is_favorited: isNowFavorite } : bike,
-                        ),
-                    },
-                };
-            });
-
-            // Update individual bike query if it exists
-            queryClient.setQueryData(['bike', bikeId], (oldData: any) => {
-                if (!oldData?.data) return oldData;
-
-                return {
-                    ...oldData,
-                    data: {
-                        ...oldData.data,
-                        is_favorited: isNowFavorite,
-                    },
-                };
             });
         },
         onError: (error: any) => {

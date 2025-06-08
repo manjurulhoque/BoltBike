@@ -20,7 +20,7 @@ const BikeCard = ({ bike }: BikeCardProps) => {
     const [showBookingProcess, setShowBookingProcess] = useState(false);
 
     // Use favorite status from bike object (no separate API call needed)
-    const isFavorite = is_favorited || false;
+    const [isFavorite, setIsFavorite] = useState(is_favorited || false);
 
     // Fetch rating statistics
     const { data: ratingStatsResponse } = useBikeRatingStats(id);
@@ -52,7 +52,12 @@ const BikeCard = ({ bike }: BikeCardProps) => {
     const handleToggleFavorite = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        toggleFavoriteMutation.mutate(id);
+        toggleFavoriteMutation.mutate(id, {
+            onSuccess: (response) => {
+                const isNowFavorite = response.data?.is_favorite;
+                setIsFavorite(isNowFavorite);
+            },
+        });
     };
 
     const handleBookingSuccess = (bookingId: number) => {
