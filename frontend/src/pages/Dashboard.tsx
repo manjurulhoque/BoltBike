@@ -1,22 +1,9 @@
 import { useState } from 'react';
-import {
-    Calendar,
-    Bike,
-    Heart,
-    User,
-    Settings,
-    LogOut,
-    Plus,
-    MapPin,
-    Star,
-    DollarSign,
-    TrendingUp,
-    Clock,
-} from 'lucide-react';
+import { Calendar, Bike, Heart, User, Settings, Plus, MapPin, Star, DollarSign, TrendingUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { useLogout, useUser } from '@/hooks/auth/useAuth';
+import { useUser } from '@/hooks/auth/useAuth';
 import { Link } from 'react-router-dom';
 import { useMyBikes } from '@/hooks/useBikes';
 import { useMyBookings, useBikeBookings } from '@/hooks/useBookings';
@@ -24,6 +11,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { getBikeTypeLabel } from '@/lib/constants';
 import BikeCard from '@/components/BikeCard';
 import DashboardBikeCard from '@/components/DashboardBikeCard';
+import UserDropdown from '@/components/UserDropdown';
 import { format } from 'date-fns';
 
 const Dashboard = () => {
@@ -33,7 +21,6 @@ const Dashboard = () => {
     const { data: bikeBookingsResponse } = useBikeBookings();
     const { data: favoritesResponse } = useFavorites();
     const [activeTab, setActiveTab] = useState('bookings');
-    const logout = useLogout();
     const { first_name, last_name, email, phone } = user || {};
     const myBikes = myBikesResponse?.data?.results || [];
     const myBookings = myBookingsResponse?.data?.results || [];
@@ -133,9 +120,7 @@ const Dashboard = () => {
                                     List your bike
                                 </Link>
                             </Button>
-                            <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center">
-                                <User className="h-4 w-4 text-white" />
-                            </div>
+                            <UserDropdown showChevron={false} />
                         </div>
                     </div>
                 </div>
@@ -213,16 +198,6 @@ const Dashboard = () => {
                                     Profile
                                 </button>
                             </nav>
-
-                            <div className="border-t mt-6 pt-4">
-                                <button
-                                    onClick={logout}
-                                    className="w-full flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
-                                >
-                                    <LogOut className="h-5 w-5 mr-3" />
-                                    Sign out
-                                </button>
-                            </div>
                         </div>
                     </div>
 
@@ -296,10 +271,12 @@ const Dashboard = () => {
                                                     alt={favorite.bike.title}
                                                     className="w-full h-48 object-cover"
                                                 />
-                                                <div className="p-4">
-                                                    <h3 className="font-semibold text-gray-900 mb-2">
-                                                        {favorite.bike.title}
-                                                    </h3>
+                                                <div className="p-4 cursor-pointer">
+                                                    <Link to={`/bikes/${favorite.bike.id}`}>
+                                                        <h3 className="font-semibold text-gray-900 mb-2">
+                                                            {favorite.bike.title}
+                                                        </h3>
+                                                    </Link>
                                                     <p className="text-gray-600 flex items-center mb-2">
                                                         <MapPin className="h-4 w-4 mr-1" />
                                                         {favorite.bike.location}
