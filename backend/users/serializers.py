@@ -64,7 +64,15 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "phone_number", "address")
+        fields = ("first_name", "last_name", "phone", "profile_photo")
+        
+    def validate_phone(self, value):
+        """Validate phone number format."""
+        if value and len(value.strip()) > 0:
+            # Basic phone validation - you can make this more strict
+            if len(value.replace(' ', '').replace('-', '').replace('(', '').replace(')', '').replace('+', '')) < 5:
+                raise serializers.ValidationError("Phone number must be at least 5 digits.")
+        return value
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):

@@ -196,6 +196,44 @@ export const usePasswordResetConfirm = () => {
     });
 };
 
+// Update user profile mutation
+export const useUpdateUser = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: Partial<User>) => {
+            const response = await fetch(`${API_URL}/me/`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+            });
+
+            const responseData: APIResponse<User> = await response.json();
+
+            if (!response.ok) {
+                const errorMessage = responseData.message || 'Profile update failed';
+                throw new Error(errorMessage);
+            }
+
+            // Handle custom response format
+            if (responseData.hasOwnProperty('success') && responseData.hasOwnProperty('data')) {
+                if (!responseData.success) {
+                    throw new Error(responseData.message || 'Profile update failed');
+                }
+                return responseData.data as User;
+            }
+
+            return responseData as unknown as User;
+        },
+        onSuccess: (updatedUser) => {
+            // Update the user data in the cache
+            queryClient.setQueryData(['user'], updatedUser);
+            // Also invalidate to ensure fresh data
+            queryClient.invalidateQueries({ queryKey: ['user'] });
+        },
+    });
+};
+
 // Logout function
 export const useLogout = () => {
     const navigate = useNavigate();

@@ -8,6 +8,7 @@ from utils.authentication import OptionalJWTAuthentication
 from .serializers import (
     SignupSerializer, 
     UserSerializer, 
+    UserUpdateSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer
 )
@@ -91,6 +92,29 @@ class MeAPIView(APIView):
             message="User fetched successfully",
             data=serializer.data,
         )
+    
+    def put(self, request):
+        """Update user profile."""
+        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            # Return updated user data
+            user_serializer = UserSerializer(request.user)
+            return api_response(
+                success=True,
+                message="Profile updated successfully",
+                data=user_serializer.data,
+            )
+        return api_response(
+            success=False,
+            message="Profile update failed",
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    
+    def patch(self, request):
+        """Partially update user profile."""
+        return self.put(request)
 
 
 class PasswordResetRequestAPIView(APIView):

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Bike, Heart, User, Settings, Plus, MapPin, Star, DollarSign, TrendingUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { useUser } from '@/hooks/auth/useAuth';
+import { useUser, useUpdateUser } from '@/hooks/auth/useAuth';
 import { Link } from 'react-router-dom';
 import { useMyBikes } from '@/hooks/useBikes';
 import { useMyBookings, useBikeBookings } from '@/hooks/useBookings';
@@ -13,6 +13,7 @@ import BikeCard from '@/components/BikeCard';
 import DashboardBikeCard from '@/components/DashboardBikeCard';
 import UserDropdown from '@/components/UserDropdown';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
     const { data: myBikesResponse } = useMyBikes();
@@ -20,8 +21,27 @@ const Dashboard = () => {
     const { data: myBookingsResponse } = useMyBookings();
     const { data: bikeBookingsResponse } = useBikeBookings();
     const { data: favoritesResponse } = useFavorites();
+    const updateUser = useUpdateUser();
+
     const [activeTab, setActiveTab] = useState('bookings');
+    const [profileData, setProfileData] = useState({
+        first_name: '',
+        last_name: '',
+        phone: '',
+    });
+
     const { first_name, last_name, email, phone } = user || {};
+
+    // Initialize profile form data when user data loads
+    useEffect(() => {
+        if (user) {
+            setProfileData({
+                first_name: user.first_name || '',
+                last_name: user.last_name || '',
+                phone: user.phone || '',
+            });
+        }
+    }, [user]);
     const myBikes = myBikesResponse?.data?.results || [];
     const myBookings = myBookingsResponse?.data?.results || [];
     const bikeBookings = bikeBookingsResponse?.data?.results || [];
@@ -99,6 +119,22 @@ const Dashboard = () => {
                 return 'bg-red-100 text-red-800';
             default:
                 return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    const handleProfileInputChange = (field: string, value: string) => {
+        setProfileData((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+    const handleSaveProfileChanges = async () => {
+        try {
+            await updateUser.mutateAsync(profileData);
+            toast.success('Profile updated successfully!');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to update profile');
         }
     };
 
@@ -498,7 +534,10 @@ const Dashboard = () => {
                                                 <input
                                                     type="text"
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                                    defaultValue={first_name || ''}
+                                                    value={profileData.first_name}
+                                                    onChange={(e) =>
+                                                        handleProfileInputChange('first_name', e.target.value)
+                                                    }
                                                 />
                                             </div>
                                             <div>
@@ -508,7 +547,10 @@ const Dashboard = () => {
                                                 <input
                                                     type="text"
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                                    defaultValue={last_name || ''}
+                                                    value={profileData.last_name}
+                                                    onChange={(e) =>
+                                                        handleProfileInputChange('last_name', e.target.value)
+                                                    }
                                                 />
                                             </div>
                                         </div>
@@ -518,9 +560,12 @@ const Dashboard = () => {
                                             </label>
                                             <input
                                                 type="email"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                                defaultValue={email || ''}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 cursor-not-allowed"
+                                                value={email || ''}
+                                                disabled
+                                                title="Email cannot be changed"
                                             />
+                                            <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -529,7 +574,8 @@ const Dashboard = () => {
                                             <input
                                                 type="tel"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                                defaultValue={phone || ''}
+                                                value={profileData.phone}
+                                                onChange={(e) => handleProfileInputChange('phone', e.target.value)}
                                                 placeholder="+1 (555) 123-4567"
                                             />
                                         </div>
@@ -541,7 +587,13 @@ const Dashboard = () => {
                                                 placeholder="Tell us about yourself..."
                                             />
                                         </div>
-                                        <Button className="bg-rose-500 hover:bg-rose-600">Save Changes</Button>
+                                        <Button
+                                            className="bg-rose-500 hover:bg-rose-600"
+                                            onClick={handleSaveProfileChanges}
+                                            disabled={updateUser.isPending}
+                                        >
+                                            {updateUser.isPending ? 'Saving...' : 'Save Changes'}
+                                        </Button>
                                     </div>
                                 </Card>
                             </div>
