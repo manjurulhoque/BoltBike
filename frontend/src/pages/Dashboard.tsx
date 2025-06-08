@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useUser, useUpdateUser } from '@/hooks/auth/useAuth';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useMyBikes } from '@/hooks/useBikes';
 import { useMyBookings, useBikeBookings } from '@/hooks/useBookings';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -22,8 +22,16 @@ const Dashboard = () => {
     const { data: bikeBookingsResponse } = useBikeBookings();
     const { data: favoritesResponse } = useFavorites();
     const updateUser = useUpdateUser();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    const [activeTab, setActiveTab] = useState('bookings');
+    // Get active tab from URL params, default to 'bookings'
+    const activeTab = searchParams.get('tab') || 'bookings';
+
+    // Function to handle tab changes
+    const setActiveTab = (tab: string) => {
+        setSearchParams({ tab });
+    };
+
     const [profileData, setProfileData] = useState({
         first_name: '',
         last_name: '',
