@@ -31,7 +31,7 @@ const Header = () => {
                     </div>
 
                     {/* Search Bar - Desktop */}
-                    <div className="hidden md:flex items-center border border-gray-300 rounded-full py-2 px-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="hidden md:flex items-center border border-gray-300 rounded-full pt-2 px-4 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center space-x-4">
                             <div className="px-3 py-1">
                                 <span className="text-sm font-medium">Where</span>
