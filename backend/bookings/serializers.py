@@ -29,8 +29,10 @@ class BookingSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "created_at", "updated_at", "total_price")
 
     def validate(self, attrs):
-        if attrs["start_time"] >= attrs["end_time"]:
-            raise serializers.ValidationError("End time must be after start time.")
+        # Only validate time order if both start_time and end_time are present
+        if "start_time" in attrs and "end_time" in attrs:
+            if attrs["start_time"] >= attrs["end_time"]:
+                raise serializers.ValidationError("End time must be after start time.")
         return attrs
 
 

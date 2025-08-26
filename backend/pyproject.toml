@@ -28,3 +28,83 @@ ensure_newline_before_comments = true
 known_django = ["django"]
 sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "LOCALFOLDER"]
 skip = ["migrations", "venv", "build", "dist"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "backend.settings"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+    "--cov=.",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+    "--durations=10",
+    "--maxfail=5",
+    "--reuse-db",
+    "--nomigrations",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "api: marks tests as API tests",
+    "models: marks tests as model tests",
+    "views: marks tests as view tests",
+    "serializers: marks tests as serializer tests",
+    "permissions: marks tests as permission tests",
+    "auth: marks tests as authentication tests",
+    "booking: marks tests as booking tests",
+    "bike: marks tests as bike tests",
+    "user: marks tests as user tests",
+    "payment: marks tests as payment tests",
+    "rating: marks tests as rating tests",
+    "favorite: marks tests as favorite tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::UserWarning",
+]
+testpaths = [
+    "tests",
+    "users",
+    "bikes", 
+    "bookings",
+    "payments",
+    "ratings",
+    "favorites",
+    "core",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/venv/*",
+    "*/__pycache__/*",
+    "*/settings.py",
+    "*/wsgi.py",
+    "*/asgi.py",
+    "*/urls.py",
+    "manage.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

@@ -1,0 +1,18 @@
+# Testing dependencies
+pytest==8.0.2
+pytest-django==4.8.0
+pytest-cov==5.0.0
+pytest-mock==3.14.0
+pytest-xdist==3.6.1
+pytest-html==4.1.1
+factory-boy==3.3.0
+faker==25.2.0
+coverage==7.4.4
+django-debug-toolbar==4.3.0
+
+# Code quality tools
+black==25.1.0
+flake8==7.2.0
+isort==6.0.1
+mypy==1.10.0
+pre-commit==3.7.1
