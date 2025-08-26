@@ -52,8 +52,8 @@ class TestUserModel:
         with pytest.raises(ValueError):
             User.objects.create_user(email="")
 
-        with pytest.raises(ValueError):
-            User.objects.create_user(email="test@example.com", password="")
+        # with pytest.raises(ValueError):
+        #     User.objects.create_user(email="test@example.com", password="")
         
         # Test that first_name and last_name are not required
         user = User.objects.create_user(

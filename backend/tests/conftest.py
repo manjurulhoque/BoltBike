@@ -1,13 +1,13 @@
 """
 Pytest configuration and fixtures for the e-bike rental platform.
 """
+
 import pytest
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from bikes.models import Bike, BikeImage, BikeType, BikeStatus
 from bookings.models import Booking, BookingStatus
@@ -127,6 +127,19 @@ def bike(db, owner, bike_data):
 
 
 @pytest.fixture
+def bike_factory(db, owner, bike_data):
+    """Create a test bike factory."""
+
+    def create_bike(**kwargs):
+        data = bike_data.copy()
+        data.update(kwargs)
+        bike = Bike.objects.create(owner=owner, **data)
+        return bike
+
+    return create_bike
+
+
+@pytest.fixture
 def bike_image_data():
     """Sample bike image data for testing."""
     return {
@@ -145,11 +158,9 @@ def bike_image(db, bike, bike_image_data):
     image_file = SimpleUploadedFile(
         "test_bike.jpg", image_content, content_type="image/jpeg"
     )
-    
+
     bike_image = BikeImage.objects.create(
-        bike=bike,
-        image=image_file,
-        **bike_image_data
+        bike=bike, image=image_file, **bike_image_data
     )
     return bike_image
 
@@ -158,9 +169,10 @@ def bike_image(db, bike, bike_image_data):
 def booking_data():
     """Sample booking data for testing."""
     from django.utils import timezone
+
     start_time = timezone.now() + timedelta(days=1)
     end_time = start_time + timedelta(hours=4)
-    
+
     return {
         "start_time": start_time,
         "end_time": end_time,
@@ -172,11 +184,7 @@ def booking_data():
 @pytest.fixture
 def booking(db, bike, user, booking_data):
     """Create and return a test booking."""
-    booking = Booking.objects.create(
-        bike=bike,
-        renter=user,
-        **booking_data
-    )
+    booking = Booking.objects.create(bike=bike, renter=user, **booking_data)
     return booking
 
 
@@ -185,7 +193,7 @@ def multiple_bikes(db, owner):
     """Create multiple test bikes for testing."""
     bikes = []
     bike_types = [BikeType.CITY, BikeType.MOUNTAIN, BikeType.ROAD]
-    
+
     for i, bike_type in enumerate(bike_types):
         bike = Bike.objects.create(
             owner=owner,
@@ -195,14 +203,14 @@ def multiple_bikes(db, owner):
             hourly_rate=Decimal(f"{15 + i*5}.00"),
             daily_rate=Decimal(f"{80 + i*20}.00"),
             bike_type=bike_type,
-            battery_range=50 + i*10,
-            max_speed=25 + i*5,
+            battery_range=50 + i * 10,
+            max_speed=25 + i * 5,
             weight=Decimal("22.5") + i,
             features=[f"Feature {i+1}", f"Feature {i+2}"],
             status=BikeStatus.AVAILABLE,
         )
         bikes.append(bike)
-    
+
     return bikes
 
 
@@ -221,7 +229,7 @@ def multiple_users(db):
             is_renter=True,
         )
         users.append(user)
-    
+
     return users
 
 
@@ -230,9 +238,7 @@ def sample_image_file():
     """Return a sample image file for testing."""
     image_content = b"fake-image-content-for-testing"
     return SimpleUploadedFile(
-        "sample_image.jpg",
-        image_content,
-        content_type="image/jpeg"
+        "sample_image.jpg", image_content, content_type="image/jpeg"
     )
 
 
@@ -240,11 +246,7 @@ def sample_image_file():
 def sample_profile_image():
     """Return a sample profile image file for testing."""
     image_content = b"fake-profile-image-content"
-    return SimpleUploadedFile(
-        "profile.jpg",
-        image_content,
-        content_type="image/jpeg"
-    )
+    return SimpleUploadedFile("profile.jpg", image_content, content_type="image/jpeg")
 
 
 # Database transaction fixtures
@@ -275,7 +277,7 @@ def large_dataset(db, owner):
             status=BikeStatus.AVAILABLE,
         )
         bikes.append(bike)
-    
+
     return bikes
 
 
