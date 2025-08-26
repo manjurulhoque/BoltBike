@@ -129,9 +129,9 @@ class TestURLPatterns:
     def test_users_urls(self):
         """Test that users URLs can be resolved."""
         try:
-            reverse("users:register")
+            reverse("users:signup")
             reverse("users:login")
-            reverse("users:profile")
+            reverse("users:me")
             assert True
         except Exception as e:
             pytest.fail(f"Failed to resolve users URLs: {e}")

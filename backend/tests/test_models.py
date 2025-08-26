@@ -54,6 +54,15 @@ class TestUserModel:
 
         with pytest.raises(ValueError):
             User.objects.create_user(email="test@example.com", password="")
+        
+        # Test that first_name and last_name are not required
+        user = User.objects.create_user(
+            email="test2@example.com",
+            password="testpass123"
+        )
+        assert user.email == "test2@example.com"
+        assert user.first_name == ""
+        assert user.last_name == ""
 
     def test_user_unique_email(self, user_data):
         """Test that email must be unique."""
