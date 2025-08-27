@@ -28,6 +28,9 @@ jobs:
       DB_HOST: localhost
       DB_PORT: 5432
       DJANGO_SETTINGS_MODULE: backend.settings
+      DJANGO_SECRET_KEY: "test1234567890"
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "*"
 
     steps:
       - uses: actions/checkout@v4
